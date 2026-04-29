@@ -75,16 +75,39 @@ Key rules:
 
 ## Step 4: Convert to PNG
 
-Run `scripts/html_to_png.py` with the HTML file path. The script auto-detects available
-tools in this order:
+Run `scripts/html_to_png.py` with the HTML file path. The script handles tool availability
+in three phases with clear priorities:
 
-1. **Playwright** (Chromium/Edge) — best quality, supports all CSS
-2. **Puppeteer** (Chrome/Chromium) — equivalent quality
-3. **Edge headless** (direct `msedge.exe --headless --screenshot`) — no npm required
-4. **wkhtmltoimage** — fallback, limited CSS support
+### Phase A — Auto-Configuration (highest priority)
 
-The script outputs the PNG path on success. If all tools fail, it reports what's missing
-so the user can install one.
+The script attempts to install **Playwright** automatically via `pip install playwright`
+and `playwright install chromium`. This is the best quality tool and should always be
+preferred. If installation fails, it retries up to **3 times** before giving up.
+
+### Phase B — Fallback (lower priority)
+
+Only if auto-configuration fails after 3 attempts, the script falls back to detecting
+pre-installed tools on the system:
+
+1. **Puppeteer** (Chrome/Chromium) — `node -e "require('puppeteer')"`
+2. **Edge headless** (direct `msedge.exe --headless --screenshot`) — no npm required
+3. **Chrome headless** — `google-chrome` / `chromium`
+4. **wkhtmltoimage** — limited CSS support, last resort
+
+### Phase C — Skip
+
+If both auto-configuration AND all fallback tools fail, the script exits with code 2.
+**This is not an error** — it means screenshots are unavailable for this session.
+Simply tell the user "Screenshots are not available (no rendering tool found), continuing
+without them" and proceed — do not block the workflow.
+
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Screenshot generated successfully |
+| 1 | Input error (HTML not found, etc.) |
+| 2 | No tool available — skip screenshot and continue |
 
 ## Step 5: Deliver
 

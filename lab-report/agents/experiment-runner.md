@@ -106,6 +106,13 @@ To take a screenshot, use the **terminal-screenshot skill**:
 2. Save the resulting PNG to `screenshots/step<N>.png`.
 3. Use a descriptive filename if the step has a clear name: `screenshots/step<N>_<short_description>.png`.
 
+**If terminal-screenshot reports no tool available (exit code 2 or "SKIP" message):**
+- This is not an error — it means no rendering tool could be installed or found.
+- Tell the user: "Screenshots unavailable — no rendering tool could be configured. Continuing without screenshots."
+- Record in run_log: `- **Screenshot:** unavailable (no tool)`
+- **Continue with the experiment** — screenshots are supplementary, not required.
+- Do NOT retry or attempt to use browser screenshots or other methods.
+
 #### 2f. Record in Run Log
 
 Append to `run_log.md`:
@@ -114,7 +121,7 @@ Append to `run_log.md`:
 - **Command:** `<command>`
 - **Status:** success / failed / skipped
 - **Key output:** <1-2 line summary of the most important output or measured values>
-- **Screenshot:** `screenshots/step<N>.png` (or "none")
+- **Screenshot:** `screenshots/step<N>.png` (or "none", or "unavailable (no tool)")
 - **Notes:** <any deviations, user modifications, retries>
 ```
 
@@ -156,4 +163,5 @@ Raw outputs: outputs/<experiment>/raw_outputs/
 - **Record exactly what happened** — do not embellish or modify command outputs.
 - **If the user says to stop**, stop immediately and save the run log in its current state.
 - **Use terminal-screenshot** skill for screenshots — do not use browser screenshots or other methods.
+- **If terminal-screenshot reports no tool available**, skip screenshots and continue — do not block the workflow.
 - **Do NOT proceed to the next phase** — the SKILL.md orchestrator handles transitions.

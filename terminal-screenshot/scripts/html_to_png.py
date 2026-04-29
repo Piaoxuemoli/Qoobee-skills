@@ -2,13 +2,17 @@
 """
 Convert terminal HTML to PNG screenshot.
 
-Auto-detects available rendering tools and uses the best one.
-Fallback order: Playwright → Puppeteer → Edge headless → wkhtmltoimage
+Auto-configures rendering tools: tries to install Playwright first (best quality),
+retrying up to 3 times. Falls back to existing system tools if auto-config fails.
+If nothing works, exits with code 2 so the caller can skip screenshots gracefully.
 
 Usage:
     python html_to_png.py <input.html> [output.png] [--width W]
 
-All HTML templates include overflow:hidden so scrollbars are suppressed.
+Exit codes:
+    0 — screenshot generated successfully
+    1 — input error (HTML not found, etc.)
+    2 — no tool available, skip screenshot and continue
 """
 
 import sys
@@ -16,6 +20,10 @@ import os
 import subprocess
 import shutil
 import tempfile
+import time
+
+
+MAX_RETRIES = 3
 
 
 def count_lines(html_path):
@@ -24,9 +32,7 @@ def count_lines(html_path):
         with open(html_path, 'r', encoding='utf-8') as f:
             text = f.read()
         import re
-        # Remove style blocks
         text = re.sub(r'<style[^>]*>.*?</style>', '', text, flags=re.DOTALL)
-        # Find content inside .body or .terminal or .content div
         m = re.search(r'<div class="(?:body|terminal|content)"[^>]*>(.*?)</div>\s*(?:</div>\s*)?</div>\s*</body>', text, flags=re.DOTALL)
         if not m:
             m = re.search(r'<div class="body"[^>]*>(.*?)</div>', text, flags=re.DOTALL)
@@ -34,37 +40,96 @@ def count_lines(html_path):
             body_text = m.group(1)
         else:
             body_text = text
-        # Strip tags and HTML entities
         body_text = re.sub(r'<[^>]+>', '', body_text)
         body_text = body_text.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
-        # Count non-empty lines (preserve intentional blank lines between blocks)
         lines = body_text.split('\n')
-        # Count all lines including blanks (blank lines take vertical space)
         return max(len(lines), 5)
     except Exception:
         return 40
 
 
 def estimate_height(line_count):
-    """Estimate needed viewport height from content lines.
-    14px font * 1.4 line-height = 19.6px per line.
-    Plus: body padding(56) + titlebar/tab(32) + body div padding(28) + safety buffer(20%).
-    """
+    """Estimate needed viewport height from content lines."""
     content_px = line_count * 20
-    chrome_px = 116  # window chrome: body padding + titlebar + terminal padding
-    return int(content_px + chrome_px)  # tight fit; html background matches body so 1-2px drift is invisible
+    chrome_px = 116
+    return int(content_px + chrome_px)
 
 
-def detect_tool():
-    """Detect available screenshot tools. Returns (tool_name, details)."""
-    # 1. Playwright (Python)
+# ---------------------------------------------------------------------------
+# Auto-configuration: install Playwright
+# ---------------------------------------------------------------------------
+
+def _try_pip_install():
+    """Try pip install playwright. Returns True on success."""
+    result = subprocess.run(
+        [sys.executable, "-m", "pip", "install", "playwright"],
+        capture_output=True, text=True, timeout=120
+    )
+    return result.returncode == 0
+
+
+def _try_playwright_install_chromium():
+    """Try playwright install chromium. Returns True on success."""
+    result = subprocess.run(
+        [sys.executable, "-m", "playwright", "install", "chromium"],
+        capture_output=True, text=True, timeout=300
+    )
+    return result.returncode == 0
+
+
+def auto_configure_playwright():
+    """
+    Attempt to install Playwright + Chromium, retrying up to MAX_RETRIES times.
+    Returns True if Playwright is usable after configuration.
+    """
+    for attempt in range(1, MAX_RETRIES + 1):
+        print(f"[auto-config] Attempt {attempt}/{MAX_RETRIES}: installing playwright...")
+
+        if not _try_pip_install():
+            print(f"[auto-config] pip install failed (attempt {attempt})", file=sys.stderr)
+            if attempt < MAX_RETRIES:
+                print("[auto-config] Retrying in 2 seconds...")
+                time.sleep(2)
+            continue
+
+        if not _try_playwright_install_chromium():
+            print(f"[auto-config] playwright install chromium failed (attempt {attempt})", file=sys.stderr)
+            if attempt < MAX_RETRIES:
+                print("[auto-config] Retrying in 2 seconds...")
+                time.sleep(2)
+            continue
+
+        # Both installs succeeded — verify import works
+        try:
+            from playwright.sync_api import sync_playwright
+            print("[auto-config] Playwright installed and ready.")
+            return True
+        except ImportError:
+            print(f"[auto-config] Import failed after install (attempt {attempt})", file=sys.stderr)
+            if attempt < MAX_RETRIES:
+                time.sleep(2)
+
+    return False
+
+
+# ---------------------------------------------------------------------------
+# Fallback: detect existing system tools
+# ---------------------------------------------------------------------------
+
+def detect_fallback_tools():
+    """
+    Detect available screenshot tools from the local system.
+    Returns (tool_name, details) or (None, {}).
+    Checks in order: Playwright (already installed), Edge headless, Chrome headless, wkhtmltoimage.
+    """
+    # 1. Playwright Python (may have been manually installed)
     try:
         from playwright.sync_api import sync_playwright
         return "playwright-python", {"sync_playwright": sync_playwright}
     except ImportError:
         pass
 
-    # 2. Playwright (Node.js / npx)
+    # 2. Playwright via npx
     if shutil.which("npx"):
         try:
             result = subprocess.run(
@@ -76,7 +141,7 @@ def detect_tool():
         except Exception:
             pass
 
-    # 3. Puppeteer (Node.js)
+    # 3. Puppeteer
     if shutil.which("node"):
         try:
             result = subprocess.run(
@@ -111,6 +176,10 @@ def detect_tool():
     return None, {}
 
 
+# ---------------------------------------------------------------------------
+# Renderers
+# ---------------------------------------------------------------------------
+
 def render_playwright_python(html_path, png_path, width):
     """Render using Playwright Python API — clips to exact content height."""
     from playwright.sync_api import sync_playwright
@@ -130,12 +199,10 @@ def render_playwright_python(html_path, png_path, width):
         page.goto(abs_html, wait_until="networkidle")
         page.wait_for_timeout(300)
 
-        # Measure the actual body height at current width, then clip to it
         body = page.query_selector("body")
         if body:
             box = body.bounding_box()
             if box:
-                # Clip exactly to body bounds with small margin
                 clip = {
                     "x": max(0, box["x"] - 4),
                     "y": max(0, box["y"] - 4),
@@ -153,13 +220,10 @@ def render_playwright_python(html_path, png_path, width):
 
 
 def render_edge_headless(html_path, png_path, width, edge_path):
-    """Render using Edge headless — no npm/python deps needed.
-    HTML templates include overflow:hidden so scrollbars are suppressed.
-    """
+    """Render using Edge headless — no npm/python deps needed."""
     abs_html = "file:///" + os.path.abspath(html_path).replace("\\", "/")
     abs_png = os.path.abspath(png_path)
 
-    # Estimate viewport height from content line count
     line_count = count_lines(html_path)
     height = int(estimate_height(line_count))
 
@@ -177,7 +241,6 @@ def render_edge_headless(html_path, png_path, width, edge_path):
     if os.path.exists(abs_png):
         return True
 
-    # Edge sometimes writes to a different location
     alt_name = os.path.basename(abs_png)
     if os.path.exists(alt_name):
         shutil.move(alt_name, abs_png)
@@ -195,7 +258,7 @@ def render_chrome_headless(html_path, png_path, width, chrome_path):
     line_count = count_lines(html_path)
     height = int(estimate_height(line_count))
 
-    result = subprocess.run(
+    subprocess.run(
         [
             chrome_path, "--headless", "--disable-gpu",
             f"--screenshot={abs_png}",
@@ -268,6 +331,10 @@ def render_playwright_npx(html_path, png_path, width):
         os.unlink(script_path)
 
 
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__)
@@ -275,24 +342,49 @@ def main():
 
     html_path = sys.argv[1]
     png_path = sys.argv[2] if len(sys.argv) > 2 else os.path.splitext(html_path)[0] + ".png"
-    width = 800  # fits 80-column terminal at 14px
+    width = 800
 
     if not os.path.exists(html_path):
         print(f"ERROR: HTML file not found: {html_path}", file=sys.stderr)
         sys.exit(1)
 
-    tool, details = detect_tool()
+    # ---- Phase 1: Auto-configure Playwright (best quality) ----
+    print("[auto-config] Attempting to install Playwright (best quality tool)...")
+    configured = auto_configure_playwright()
+
+    if configured:
+        # Use the freshly installed Playwright
+        try:
+            from playwright.sync_api import sync_playwright
+            success = render_playwright_python(html_path, png_path, width)
+        except Exception as e:
+            print(f"ERROR with auto-configured Playwright: {e}", file=sys.stderr)
+            success = False
+
+        if success and os.path.exists(png_path):
+            size_kb = os.path.getsize(png_path) / 1024
+            print(f"OK: {png_path} ({size_kb:.0f} KB)")
+            sys.exit(0)
+        else:
+            print("[auto-config] Playwright install succeeded but render failed."
+                  " Trying fallback...", file=sys.stderr)
+
+    # ---- Phase 2: Fallback to existing system tools ----
+    print("[fallback] Detecting existing system tools...")
+    tool, details = detect_fallback_tools()
 
     if tool is None:
+        # ---- Phase 3: Nothing works — skip screenshot ----
         print(
-            "ERROR: No screenshot tool found.\n"
-            "Install one of: playwright (pip install playwright), "
-            "puppeteer (npm i puppeteer), or Microsoft Edge.",
+            "SKIP: No screenshot tool available.\n"
+            "Auto-configuration (playwright install) failed after 3 attempts.\n"
+            "No existing system tools (Edge, Chrome, wkhtmltoimage) found.\n"
+            "Continuing without screenshot — no user action required.",
             file=sys.stderr
         )
-        sys.exit(1)
+        sys.exit(2)
 
-    print(f"Using: {tool}")
+    print(f"[fallback] Using existing tool: {tool}")
 
     success = False
     try:
@@ -316,8 +408,13 @@ def main():
         print(f"OK: {png_path} ({size_kb:.0f} KB)")
         sys.exit(0)
     else:
-        print(f"ERROR: Failed to generate screenshot with {tool}", file=sys.stderr)
-        sys.exit(1)
+        # Fallback render also failed — skip
+        print(
+            "SKIP: All tools failed to render screenshot.\n"
+            "Continuing without screenshot — no user action required.",
+            file=sys.stderr
+        )
+        sys.exit(2)
 
 
 if __name__ == "__main__":
