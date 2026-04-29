@@ -8,13 +8,13 @@ A collection of Claude Code skills — automating lab reports, terminal screensh
 
 ## Skills
 
-### [lab-report](lab-report/)
+### [lab-report](lab-report/) — [详细文档](docs/lab-report.md)
 
 实验报告全流程自动化：从实验手册提取流程 → 生成模板 → 执行实验并截图 → 完成最终报告。
 
 Automate the full lab-report pipeline: extract procedures from source materials → generate templates → execute experiments with screenshots → produce the final report.
 
-### [terminal-screenshot](terminal-screenshot/)
+### [terminal-screenshot](terminal-screenshot/) — [详细文档](docs/terminal-screenshot.md)
 
 将终端命令输出渲染为逼真的 PNG 截图。支持多种终端风格、CRT 效果，自动配置渲染工具。
 
@@ -27,16 +27,17 @@ Render terminal command outputs as realistic PNG screenshots. Multiple terminal 
 ```
 Qoobee-skills/
 ├── README.md
-├── lab-report/            # 实验报告 skill
-│   ├── README.md
+├── docs/                   # 详细文档（与 skill 代码分离）
+│   ├── lab-report.md
+│   └── terminal-screenshot.md
+├── lab-report/             # 实验报告 skill 代码
 │   ├── SKILL.md
 │   └── ...
-└── terminal-screenshot/   # 终端截图 skill
-    ├── README.md
+└── terminal-screenshot/    # 终端截图 skill 代码
     ├── SKILL.md
     └── ...
 ```
 
-每个 skill 目录内有详细的 README.md 和 SKILL.md（Claude Code 自动加载的技能说明）。
+每个 skill 的 SKILL.md 是 Claude Code 自动加载的技能指令文件，详细文档在 `docs/` 目录中。
 
-Each skill directory contains a detailed README.md and SKILL.md (the skill instructions loaded by Claude Code).
+Each skill's SKILL.md is the instruction file loaded by Claude Code. Detailed docs live in `docs/`, separated from skill code.
