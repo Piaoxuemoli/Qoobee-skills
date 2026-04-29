@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Lab-report outputs (user-generated, not skill code)
+lab-report/outputs/*
+!lab-report/outputs/.gitkeep
