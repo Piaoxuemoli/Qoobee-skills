@@ -44,9 +44,9 @@ Agent 会根据 skill 描述自动选择 `lab-report`、`coursework-helper` 或 
 
 ### [lab-report](lab-report/) — [详细文档](docs/lab-report.md)
 
-实验报告全流程自动化：首次配置个人信息，本地复用；支持材料目录一键导入、自动模式、课程模板记忆、证据映射、Anthropic 官方文件处理 skills 检查，以及可执行实验、已有数据、纯写作三类报告路径。
+实验报告全流程自动化：首次配置个人信息，本地复用；支持材料目录一键导入、自动模式、课程模板记忆、证据映射、Anthropic 官方文件处理 skills 检查，以及可执行实验、已有数据、纯写作三类报告路径。内置模板采用标准大学实验报告格式（10 节结构），导出 DOCX 时自动应用学术排版规范。
 
-Automate lab reports with reusable local profile data, material-folder intake, optional auto mode, course template memory, evidence maps, official document-skill checks, and three paths: executable experiments, provided-data reports, and paper-only writeups.
+Automate lab reports with reusable local profile data, material-folder intake, optional auto mode, course template memory, evidence maps, official document-skill checks, and three paths: executable experiments, provided-data reports, and paper-only writeups. Built-in templates follow standard university format (10-section), with academic styling auto-applied on DOCX export.
 
 ### [coursework-helper](coursework-helper/) — [详细文档](docs/coursework-helper.md)
 

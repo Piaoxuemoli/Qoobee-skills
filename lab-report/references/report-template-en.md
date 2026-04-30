@@ -1,25 +1,50 @@
 # Default English Lab Report Template
 
-Use this template when the user does not provide a custom template.
+Use this template when the user does not provide a custom template. This template structure follows standard university lab report format.
 
 ## Template Structure
 
 ```markdown
 # <Experiment Title>
 
-**Name:** <Student Name>
-**Student ID:** <ID>
-**Class:** <Class Name>
-**Experiment Date:** <Date>
-**Instructor:** <Instructor Name>
+**<Institution Name>**
+**<College/School Name>**
+**Standard Lab Report**
 
 ---
 
-## 1. Objective
+**Course Name:** <Course Name>
+
+---
+
+| Item | Content |
+|------|---------|
+| **Name** | <Student Name> |
+| **Student ID** | <ID> |
+| **Class** | <Class Name> |
+| **Experiment Date** | <Date> |
+| **Instructor** | <Instructor Name> |
+| **Lab Name** | <Lab Name> |
+
+---
+
+## 1. Experiment Name
+
+<Experiment Name>
+
+## 2. Experiment Project Name
+
+<Experiment Project Name>
+
+## 3. Objective
 
 <Extracted from procedure_summary.md>
 
-## 2. Equipment and Environment
+## 4. Experiment Content
+
+<Extracted from procedure_summary.md>
+
+## 5. Equipment (Devices and Components)
 
 | Equipment/Software | Model/Version | Quantity/Notes |
 |--------------------|---------------|----------------|
@@ -27,15 +52,11 @@ Use this template when the user does not provide a custom template.
 
 <Extracted from procedure_summary.md>
 
-## 3. Theory
-
-<Brief description of core principles, formulas, algorithms>
-
-## 4. Procedure
+## 6. Procedure and Operations
 
 ### Step 1: <Step Name>
 
-<Step description and commands to execute>
+<Step description and operations>
 
 ```bash
 <command>
@@ -43,7 +64,7 @@ Use this template when the user does not provide a custom template.
 
 ### Step 2: <Step Name>
 
-<Step description and commands to execute>
+<Step description and operations>
 
 ```bash
 <command>
@@ -51,7 +72,7 @@ Use this template when the user does not provide a custom template.
 
 <!-- Add more steps as needed -->
 
-## 5. Results
+## 7. Results and Data Analysis
 
 ### Step 1 Results
 
@@ -74,18 +95,32 @@ Use this template when the user does not provide a custom template.
 | <Metric 1> | [TO BE FILLED] |
 | <Metric 2> | [TO BE FILLED] |
 
-## 6. Analysis and Discussion
+## 8. Conclusion
 
 [TO BE FILLED]
 
-## 7. Conclusion
+## 9. Summary and Reflections
 
 [TO BE FILLED]
+
+## 10. Suggestions for Improvement
+
+[TO BE FILLED]
+
+---
+
+**Report Score:** ____________
+
+**Instructor Signature:** ____________
+
+**Date:** ____________
 ```
 
 ## Usage Notes
 
 - `[TO BE FILLED]` placeholders are replaced by the report-writer agent during final fill-in with actual data and analysis.
 - `[SCREENSHOT: stepN]` placeholders are replaced with inline screenshots.
-- Personal info fields are auto-filled from `experiment_info.json`.
-- Objective, equipment, and procedure are filled from `procedure_summary.md`.
+- Personal info fields (name, student ID, class, etc.) are auto-filled from `experiment_info.json`.
+- Institution name, college name, and course name are auto-filled from `experiment_info.json`.
+- Objective, content, equipment, and procedure are filled from `procedure_summary.md`.
+- This template follows standard university lab report format; if the user specifies a custom template, it takes precedence.

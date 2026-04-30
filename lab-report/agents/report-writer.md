@@ -141,6 +141,17 @@ Read `delivery_formats` from `report_context.json`.
 
 - Always keep `final_report.md`.
 - If `docx` is requested, use the official `docx` skill to create `final_report.docx`.
+  - When the default built-in template is used (i.e., no course template and no user-provided
+    template), format the DOCX as a standard university lab report:
+    - Title: centered, bold, large font (e.g. 黑体 16-18pt for Chinese, 14-16pt for English)
+    - University/college header: centered, smaller than title
+    - Section headings (一、二、... or 1. 2. ...): bold, larger than body (e.g. 14pt)
+    - Body text: serif (e.g. 宋体/SimSun for Chinese, Times New Roman for English), 12pt
+    - Tables: bordered, header row bold
+    - Page margins: standard academic (2.5cm all sides or 1 inch)
+    - Footer with score/signature fields at the end
+  - If a course template or user-provided template is used, follow its explicit formatting
+    instructions instead.
 - If `pdf` is requested, use the official `pdf` skill to create `final_report.pdf`.
 - If export fails, keep the Markdown report, record the failure in `delivery_manifest.json`,
   and do not hide the warning.

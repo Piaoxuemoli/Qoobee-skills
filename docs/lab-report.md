@@ -82,6 +82,8 @@ python lab-report/scripts/index_source_files.py --inputs "./lab3-materials" --ou
 
 报告写作时优先级为：课程模板 → 本次用户提供模板 → 内置默认模板。
 
+内置默认模板采用标准大学实验报告格式（10 节结构）：实验名称、实验项目名称、实验目的、实验内容、实验器材、实验步骤及操作、实验数据及结果分析、实验结论、总结及心得体会、改进建议，含学校/学院抬头和评分/签字栏。导出 DOCX 时自动应用大学报告排版规范（标题居中加粗大号、正文宋体/Times New Roman 12pt、表头加粗、标准学术页边距）。
+
 ## 文件处理能力 / File Processing
 
 在读取实验材料前，skill 会检查用户环境中是否已安装 Anthropic 官方文件处理 skills：
@@ -154,8 +156,8 @@ lab-report/
 │   └── experiment-runner.md         # 子代理3: 执行实验 / Execute experiment
 ├── references/
 │   ├── file-readers.md              # 文件读取策略 / File reading strategies
-│   ├── report-template-zh.md        # 中文默认模板 / Default Chinese template
-│   ├── report-template-en.md        # 英文默认模板 / Default English template
+│   ├── report-template-zh.md        # 中文默认模板（标准大学10节格式）/ Default Chinese template
+│   ├── report-template-en.md        # 英文默认模板（标准大学10节格式）/ Default English template
 │   └── schemas.md                   # 数据结构约定 / Shared schemas
 ├── scripts/
 │   ├── check_official_skills.py     # Anthropic 官方文件 skills 检查 / Official file skills check
