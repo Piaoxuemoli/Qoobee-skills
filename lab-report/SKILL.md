@@ -98,7 +98,40 @@ Collect or infer:
 Prefer inference over extra questions. Ask only when classification is ambiguous or required
 inputs are missing.
 
-### 4. Initialize Output Directory
+### 4. Check Official File Skills
+
+Before parsing source files, check whether the user has the official Anthropic document
+skills required for those file types:
+
+```bash
+python lab-report/scripts/check_official_skills.py --source-files "<path1>|<path2>"
+```
+
+If any required skill is missing, install it automatically through OpenSkill:
+
+```bash
+python lab-report/scripts/check_official_skills.py --install --source-files "<path1>|<path2>"
+```
+
+The check covers:
+
+| File type | Required official skill |
+|-----------|-------------------------|
+| `.pdf` | `pdf` |
+| `.doc`, `.docx` | `docx` |
+| `.ppt`, `.pptx` | `pptx` |
+| `.xls`, `.xlsx`, `.xlsm`, `.csv`, `.tsv` | `xlsx` |
+
+If OpenSkill cannot run because `npx`/Node.js is unavailable, stop and tell the user that
+official file skills could not be installed automatically. Do not pretend to support an
+unsupported file type; ask the user to install Node.js or provide the material in a readable
+format.
+
+This controlled startup dependency repair is allowed because it is limited to official
+Anthropic document skills needed to read user-provided files. Do not use it to install
+unrelated skills or project dependencies.
+
+### 5. Initialize Output Directory
 
 Run:
 
@@ -207,7 +240,8 @@ Always require explicit confirmation, even in auto mode:
 - permission ownership changes: `chmod 777`, `chown`
 - system state changes: `shutdown`, `reboot`, `poweroff`
 - destructive database operations: `DROP`, `DELETE`, `TRUNCATE`
-- global package installation or environment mutation
+- global package installation or environment mutation, except the controlled official
+  document-skill repair in Startup Step 4
 
 Never run destructive commands outside the project directory without explicit permission.
 

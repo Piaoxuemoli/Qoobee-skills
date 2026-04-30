@@ -28,16 +28,23 @@ Read `references/schemas.md` before writing outputs.
 
 ### Step 1: Read Source Files
 
-For each source file, determine the format and read it using `references/file-readers.md`:
+For each source file, determine the format and read it using `references/file-readers.md`.
+Before extraction, the orchestrator should already have run
+`scripts/check_official_skills.py`; if it reports missing official skills, treat that as a
+blocking setup issue until installation succeeds or the user provides a readable alternative.
 
-- `.pdf` -> `pdftotext -layout`, `pdfplumber`, or vision for scanned pages
-- `.docx` -> `python-docx` or `pandoc`
-- `.pptx` -> `python-pptx`
+Use official Anthropic skills as the primary reader for supported formats:
+
+- `.pdf` -> `pdf`
+- `.doc` / `.docx` -> `docx`
+- `.ppt` / `.pptx` -> `pptx`
+- `.xls` / `.xlsx` / `.xlsm` / `.csv` / `.tsv` -> `xlsx`
 - `.txt` / `.md` -> read directly
 - `.png` / `.jpg` / `.webp` -> vision / image understanding
 
-If a file fails to read with the primary method, try fallbacks. If all fail, report a
-blocking missing-material issue to the orchestrator.
+If a file fails to read with the official skill's preferred method, try the fallbacks listed
+in `references/file-readers.md`. If all fail, report a blocking missing-material issue to the
+orchestrator.
 
 ### Step 2: Parse by Report Type
 

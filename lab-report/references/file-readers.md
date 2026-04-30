@@ -2,9 +2,38 @@
 
 Strategies for reading experiment source materials in various formats.
 
+## Official Anthropic Skills First
+
+Before reading source materials, the orchestrator must check that the needed official
+Anthropic skills are installed:
+
+```bash
+python lab-report/scripts/check_official_skills.py --source-files "<path1>|<path2>"
+```
+
+If the check reports missing skills, run:
+
+```bash
+python lab-report/scripts/check_official_skills.py --install --source-files "<path1>|<path2>"
+```
+
+This bootstraps OpenSkill through `npx -y skills add anthropics/skills@<skill> -g -y`. The supported
+official file-processing skills are:
+
+| Source format | Official skill | Use for |
+|---------------|----------------|---------|
+| `.pdf` | `pdf` | Reading/extracting text and tables from PDFs; OCR or image fallback for scanned pages |
+| `.doc`, `.docx` | `docx` | Reading Word lab manuals, extracting tables/images, and producing DOCX outputs if requested |
+| `.ppt`, `.pptx` | `pptx` | Reading slide decks, speaker notes, screenshots, and procedure slides |
+| `.xls`, `.xlsx`, `.xlsm`, `.csv`, `.tsv` | `xlsx` | Reading data tables, experiment results, measurements, and spreadsheet outputs |
+
+Use the official skill instructions as the primary source of extraction strategy. The
+fallbacks below are only for environments where the relevant official skill is unavailable
+or the official skill's preferred tool fails on a specific file.
+
 ## PDF Files (.pdf)
 
-Prefer text extraction, fall back to vision:
+Primary skill: `pdf`. Prefer text extraction, fall back to vision:
 
 1. **`pdftotext -layout`** (from poppler-utils) — best for text-based PDFs, preserves layout.
    ```bash
@@ -18,6 +47,8 @@ Prefer text extraction, fall back to vision:
 4. **Vision fallback**: For image-based PDFs (scanned documents, slides exported as PDF), convert pages to images and use vision capabilities. Not all pages — sample enough to capture the procedure.
 
 ## Word Documents (.docx)
+
+Primary skill: `docx`.
 
 1. **`python-docx`** (Python) — best for structured extraction:
    ```python
@@ -35,6 +66,8 @@ Prefer text extraction, fall back to vision:
    ```
 
 ## PowerPoint (.pptx)
+
+Primary skill: `pptx`.
 
 1. **`python-pptx`** (Python):
    ```python
@@ -62,6 +95,23 @@ Use the `mcp__MiniMax__understand_image` tool or the built-in vision capability 
 - Scanned pages
 
 Prompt the vision tool with: "Extract all text from this image. Focus on experimental procedures, equipment lists, and measurement instructions."
+
+## Spreadsheets (.xlsx, .xlsm, .csv, .tsv)
+
+Primary skill: `xlsx`.
+
+Use the `xlsx` skill for spreadsheet inspection, table normalization, formulas, charts, and
+CSV/TSV cleanup. For lab reports, extract:
+
+1. Column names and units
+2. Raw measurements
+3. Calculated results and formulas
+4. Table captions or sheet names that explain context
+5. Charts or plotted trends when present
+
+When the spreadsheet is malformed, use the `xlsx` skill's cleanup guidance before summarizing
+the data. Do not silently discard rows with parse errors; record cleanup assumptions in
+`procedure_summary.md`.
 
 ## Mixed Content
 

@@ -1,9 +1,10 @@
 # lab-report
 
-实验报告全流程自动化技能。支持首次本地配置个人信息、自动模式，以及三种报告路径：可执行实验、已有数据、纯写作报告。
+实验报告全流程自动化技能。支持首次本地配置个人信息、自动模式、官方文件处理 skills 检查，以及三种报告路径：可执行实验、已有数据、纯写作报告。
 
-Automate lab reports with a local profile cache, optional auto mode, and three report paths:
-executable experiments, reports with provided data, and paper-only writeups.
+Automate lab reports with a local profile cache, optional auto mode, official document-skill
+checks, and three report paths: executable experiments, reports with provided data, and
+paper-only writeups.
 
 ## 工作流 / Workflow
 
@@ -44,6 +45,31 @@ course, instructor, and institution. Later reports reuse this profile automatica
 
 Auto mode skips routine confirmations after startup. It still stops for missing data,
 ambiguous steps, blocking command failures, or destructive operations.
+
+## 文件处理能力 / File Processing
+
+在读取实验材料前，skill 会检查用户环境中是否已安装 Anthropic 官方文件处理 skills：
+
+```bash
+python lab-report/scripts/check_official_skills.py --source-files "<path1>|<path2>"
+```
+
+如缺失，skill 会尝试通过 OpenSkill 自动安装：
+
+```bash
+python lab-report/scripts/check_official_skills.py --install --source-files "<path1>|<path2>"
+```
+
+支持映射如下：
+
+| 文件格式 / Format | 官方 skill / Official skill |
+|-------------------|-----------------------------|
+| `.pdf` | `pdf` |
+| `.doc`, `.docx` | `docx` |
+| `.ppt`, `.pptx` | `pptx` |
+| `.xls`, `.xlsx`, `.xlsm`, `.csv`, `.tsv` | `xlsx` |
+
+如果当前机器没有 `npx`/Node.js，自动安装会停止并提示用户补齐环境，避免在缺少对应 skill 时硬解析文件。
 
 ## 子代理架构 / Sub-Agent Architecture
 
@@ -94,6 +120,7 @@ lab-report/
 │   ├── report-template-en.md        # 英文默认模板 / Default English template
 │   └── schemas.md                   # 数据结构约定 / Shared schemas
 ├── scripts/
+│   ├── check_official_skills.py     # Anthropic 官方文件 skills 检查 / Official file skills check
 │   ├── init_output_dir.py           # 输出目录初始化 / Output dir initializer
 │   └── profile_config.py            # 本地基础信息缓存 / local profile cache
 ├── assets/
@@ -116,9 +143,11 @@ outputs/<experiment-name>/
 
 ## 依赖 / Dependencies
 
-- **terminal-screenshot** — 用于 Phase 3 截图 / For Phase 3 screenshot capture
+- **terminal-screenshot** — 用于可执行实验截图 / For executable experiment screenshots
+- **Anthropic official skills** — `pdf`, `docx`, `pptx`, `xlsx` for source file processing
+- **OpenSkill / npx skills** — 用于自动补装缺失官方 skills / Install missing official skills
 - Python 3 — 运行初始化脚本 / Run init script
-- 可选 / Optional: `pdftotext`, `python-docx`, `python-pptx` — 用于文件解析 / For file parsing
+- 可选 / Optional: `pdftotext`, `python-docx`, `python-pptx`, `pandoc` — fallback parsers
 
 ## 许可证 / License
 
