@@ -4,7 +4,8 @@ Create classroom presentation slides in Markdown and optionally prepare for PPTX
 
 ## Role
 
-Create `final_slides.md` from `outline.md`, source materials, and assignment requirements.
+Create slide drafts and final slide Markdown from `02_outline/outline.md`, source materials,
+and assignment requirements.
 
 ## Slide Principles
 
@@ -19,7 +20,18 @@ Create `final_slides.md` from `outline.md`, source materials, and assignment req
 
 ## Structure
 
-Default structure:
+Create a deck-level narrative before writing individual slides. For decks longer than 8
+slides, use 3-4 sections so the output does not become a flat sequence of similar bullet
+pages.
+
+Default section rhythm:
+
+1. **Opening**: title, hook, problem
+2. **Core Explanation**: concepts, mechanism, framework
+3. **Application / Case**: example, course connection, implications
+4. **Takeaway**: summary, reflection, Q&A
+
+Default 8-slide structure:
 
 1. Title
 2. Background / Why this topic matters
@@ -32,21 +44,52 @@ Default structure:
 
 Adjust the count for required presentation length.
 
+Avoid these organization problems:
+
+- 8+ slides with no section breaks or narrative grouping.
+- Every slide using the same title + 4 bullets layout.
+- Repeating abstract labels like "background / point / summary" without a concrete message.
+- Putting visual directions into visible slide text.
+- Letting the PPTX packager treat build notes as user-visible content.
+
 ## Output Format
 
-Write:
+Write each slide as a structured slide card. The metadata comment is for the PPTX builder and
+quality checks; it should not become visible slide text.
 
 ```markdown
+<!-- slide: role=cover section=Opening layout=title-hero -->
 # Slide 1: <Title>
+Key message: <one sentence>
+
+Visible content:
 - Bullet
 - Bullet
 
 Speaker notes:
 ...
+
+Design notes:
+- <layout/visual motif/color/diagram guidance>
 ```
 
 If the user asks for PPTX, the delivery packager should use the official `pptx` skill to
 convert or recreate the slides. The PPTX must preserve the preset 16:9 widescreen page size.
+
+Write intermediate work to `03_drafts/draft_slides.md` when useful, then write the final slide
+Markdown to `04_final/final_slides.md`. Use `assignment_context.json.output_paths.final_slides`
+when available.
+
+Use varied layouts across the deck:
+
+| Role | Good layouts |
+|------|--------------|
+| `cover` | `title-hero`, `title-with-subtitle` |
+| `hook` | `question`, `contrast`, `problem-card` |
+| `concept` | `diagram`, `two-column`, `process-flow` |
+| `case` | `before-after`, `example-card`, `quote-plus-analysis` |
+| `transition` | `section-divider`, `big-number` |
+| `takeaway` | `three-takeaways`, `closing-statement` |
 
 ## Evidence
 
@@ -60,6 +103,9 @@ Update `evidence_notes.md` for:
 
 - Slides are readable in class.
 - Page size is explicitly 16:9 widescreen for PPTX delivery.
+- Deck has clear sections and a narrative arc.
+- No more than 3 consecutive slides use the same layout.
+- Build metadata and design notes are not visible slide content in PPTX.
 - Speaker notes make the presentation easy to deliver.
 - No slide is just a paragraph pasted onto a page.
 - The final summary has real takeaways, not empty slogans.

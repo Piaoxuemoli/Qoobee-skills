@@ -10,8 +10,8 @@ agents can follow.
 
 ## Inputs
 
-- `assignment_context.json`
-- `source_manifest.json`, if present
+- `00_admin/assignment_context.json`
+- `01_sources/source_manifest.json`, if present
 - user context and visible assignment requirements
 - source files or extracted notes
 
@@ -57,10 +57,12 @@ published paper.
 
 Write:
 
-- `outline.md`
-- initial `evidence_notes.md`
-- update important fields in `assignment_context.json` if the task type, topic, course,
+- `02_outline/outline.md`
+- initial `02_outline/evidence_notes.md`
+- update important fields in `00_admin/assignment_context.json` if the task type, topic, course,
   length, or language was inferred from materials
+
+Use `assignment_context.json.output_paths` whenever available instead of hard-coded paths.
 
 ## Rules
 

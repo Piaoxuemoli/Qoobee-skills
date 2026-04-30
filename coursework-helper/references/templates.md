@@ -51,25 +51,65 @@ Use these as defaults when the user does not provide a teacher template.
 Preset page size: 16:9 widescreen, 13.333 x 7.5 inches (33.867 x 19.05 cm). Use this size for
 all generated PPTX files unless the teacher explicitly requires another size.
 
+For decks longer than 8 slides, organize the deck into clear sections. Do not output a flat
+list of same-looking bullet pages.
+
 ```markdown
+<!-- slide: role=cover section=Opening layout=title-hero -->
 # Slide 1: 标题
+Key message: 这次汇报要回答的核心问题。
+
+Visible content:
 - 题目
 - 姓名/课程/日期
 
 Speaker notes:
 开场说明汇报主题。
 
+Design notes:
+- 深色封面，大标题，少量副标题
+
+<!-- slide: role=hook section=Opening layout=question -->
 # Slide 2: 背景
+Key message: 为什么这个主题值得讨论。
+
+Visible content:
 - 为什么这个主题值得讨论
 - 与课程的关系
 
-# Slide 3-8: 主体
+Speaker notes:
+提出问题，引出主体。
+
+Design notes:
+- 问题卡片或对比布局
+
+<!-- slide: role=concept section=Core layout=diagram -->
+# Slide 3: 主体观点
+Key message: 一个清晰、可复述的观点。
+
+Visible content:
 - 每页一个核心观点
 - 每页 3-5 条短 bullet
 
+Speaker notes:
+解释该页观点。
+
+Design notes:
+- 图示、流程或双栏，不要只堆 bullet
+
+<!-- slide: role=takeaway section=Closing layout=three-takeaways -->
 # Final Slide: 总结
+Key message: 听众应该带走的结论。
+
+Visible content:
 - 3 个 takeaway
 - Q&A
+
+Speaker notes:
+收束观点并邀请提问。
+
+Design notes:
+- 三点总结或结论卡片
 ```
 
 ## Presentation Script / 演讲稿

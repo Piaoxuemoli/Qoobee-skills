@@ -79,23 +79,41 @@ The script creates:
 
 ```text
 coursework-helper/outputs/<assignment-name>/
-├── assignment_context.json
-├── source_manifest.json
-├── outline.md
-├── evidence_notes.md
-├── final_paper.md
-├── final_slides.md
-├── final_script.md
-├── delivery_manifest.json
+├── 00_admin/
+│   ├── assignment_context.json
+│   └── delivery_manifest.json
+├── 01_sources/
+│   └── source_manifest.json
+├── 02_outline/
+│   ├── outline.md
+│   └── evidence_notes.md
+├── 03_drafts/
+│   ├── draft_paper.md
+│   ├── draft_slides.md
+│   └── draft_script.md
+├── 04_final/
+│   ├── final_paper.md
+│   ├── final_slides.md
+│   └── final_script.md
+├── 05_exports/
+│   ├── final_paper.docx
+│   ├── final_slides.pptx
+│   └── final_report.pdf
+├── 06_qa/
+│   └── qa_report.md
 └── assets/
 ```
+
+`assignment_context.json` includes an `output_paths` map. Agents should write to those paths
+instead of inventing new locations. Keep root-level output files empty or absent; real
+deliverables belong in the managed folders above.
 
 If a directory or multiple files are provided, index them:
 
 ```bash
 python coursework-helper/scripts/index_source_files.py \
   --inputs "<path1>|<path2>" \
-  --output "<output_dir>/source_manifest.json"
+  --output "<output_dir>/01_sources/source_manifest.json"
 ```
 
 ### 3. Check Official File Skills
@@ -124,9 +142,9 @@ the file can still be read reliably.
 
 Read `agents/assignment-planner.md`. It creates:
 
-- `outline.md`
+- `02_outline/outline.md`
 - updated `assignment_context.json`
-- initial `evidence_notes.md`
+- initial `02_outline/evidence_notes.md`
 
 It should classify the task, identify teacher requirements, choose structure, and decide what
 claims need evidence.
@@ -145,6 +163,10 @@ For `mixed`, run the agents in the order that helps the student most:
 2. Slides
 3. Script/speaker notes
 
+For PPT tasks, `final_slides.md` must be organized as structured slide cards with deck
+sections, slide roles, layouts, key messages, visible content, speaker notes, and design notes.
+The visible PPT should not become a flat sequence of same-looking bullet pages.
+
 ### Step 3: Polish and Package
 
 Read `agents/delivery-packager.md`.
@@ -155,8 +177,9 @@ It should:
 - remove generic AI phrasing and empty slogans
 - preserve required structure and word/slide counts
 - enforce the preset PPT page size before PPTX delivery
+- run slide organization checks before PPTX delivery when `final_slides.md` exists
 - export requested DOCX/PDF/PPTX using official skills when available
-- write `delivery_manifest.json`
+- write `00_admin/delivery_manifest.json`
 
 ## Quality Bar
 
@@ -167,6 +190,8 @@ Good coursework output should be:
 - concrete enough to avoid hollow filler
 - not suspiciously overproduced for a low-stakes class
 - clear about which claims came from materials and which are general framing
+- easy to navigate in the output directory, with final files separated from drafts, exports,
+  source indexes, and QA reports
 
 ## Safety and Honesty
 

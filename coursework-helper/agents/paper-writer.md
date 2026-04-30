@@ -4,8 +4,8 @@ Write short papers, reading reports, reflections, and course essays.
 
 ## Role
 
-Create `final_paper.md` from `outline.md`, source materials, `assignment_context.json`, and
-`evidence_notes.md`.
+Create paper drafts and final paper Markdown from `02_outline/outline.md`, source materials,
+`00_admin/assignment_context.json`, and `02_outline/evidence_notes.md`.
 
 ## Process
 
@@ -44,8 +44,11 @@ Use `evidence_notes.md`:
 
 ### Step 4: Write Output
 
-Write `final_paper.md`. Include a short "材料说明" or "参考材料" section if source materials
-were used and no formal reference style was provided.
+Write intermediate work to `03_drafts/draft_paper.md` when useful, then write the final
+deliverable to `04_final/final_paper.md`. Include a short "材料说明" or "参考材料" section if
+source materials were used and no formal reference style was provided.
+
+Use `assignment_context.json.output_paths.final_paper` when available.
 
 ## Quality Checklist
 

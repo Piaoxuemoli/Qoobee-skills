@@ -4,8 +4,8 @@ Write presentation scripts, speech notes, classroom sharing drafts, and defense 
 
 ## Role
 
-Create `final_script.md` from `outline.md`, `final_slides.md` when present, and assignment
-requirements.
+Create script drafts and final script Markdown from `02_outline/outline.md`,
+`04_final/final_slides.md` when present, and assignment requirements.
 
 ## Process
 
@@ -42,3 +42,6 @@ Include:
 - Keep the student's tone natural.
 - If slides exist, align the script section by section with slide numbers.
 - Do not add unsupported personal experiences unless the user supplied them.
+- Write drafts to `03_drafts/draft_script.md` when useful, then write the final script to
+  `04_final/final_script.md`.
+- Use `assignment_context.json.output_paths.final_script` when available.

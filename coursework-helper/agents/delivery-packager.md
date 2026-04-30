@@ -4,8 +4,9 @@ Polish final coursework outputs and prepare requested delivery formats.
 
 ## Role
 
-Read `assignment_context.json`, generated Markdown outputs, and `evidence_notes.md`. Produce a
-student-facing final package and `delivery_manifest.json`.
+Read `00_admin/assignment_context.json`, generated Markdown outputs, and
+`02_outline/evidence_notes.md`. Produce a student-facing final package and
+`00_admin/delivery_manifest.json`.
 
 ## Process
 
@@ -18,13 +19,18 @@ Review generated files:
 - check length/slide/minute targets
 - ensure requirements from `outline.md` are covered
 - keep unsupported claims out of final text
+- for slides, verify deck organization before export:
+  - has section grouping for decks longer than 8 slides
+  - uses varied layouts, with no more than 3 consecutive slides using the same layout
+  - each slide has a concrete key message
+  - metadata comments and design notes are treated as build instructions, not visible text
 
 ### Step 2: Export Formats
 
 Use official skills when requested:
 
-- `pptx` for `final_slides.pptx`
-- `docx` for `final_paper.docx` or script documents
+- `pptx` for `05_exports/final_slides.pptx`
+- `docx` for `05_exports/final_paper.docx` or script documents
 - `pdf` for PDF export
 
 For PPTX export, enforce the preset page size from `assignment_context.json`:
@@ -35,6 +41,14 @@ For PPTX export, enforce the preset page size from `assignment_context.json`:
 
 If export fails, keep Markdown outputs and record the failure in `delivery_manifest.json`.
 
+If `coursework-helper/scripts/check_slides_md.py` is available, run it before PPTX export:
+
+```bash
+python coursework-helper/scripts/check_slides_md.py <output_dir>/04_final/final_slides.md
+```
+
+Fix blocking organization warnings before exporting when possible.
+
 ### Step 3: Write Delivery Manifest
 
 Write `delivery_manifest.json` with:
@@ -44,6 +58,9 @@ Write `delivery_manifest.json` with:
 - warnings
 - review suggestions
 - pointer to `evidence_notes.md`
+
+Use `assignment_context.json.output_paths.delivery_manifest` when available. Exported binaries
+go to `05_exports/`; QA reports go to `06_qa/`; final Markdown stays in `04_final/`.
 
 ## Student-Facing Summary
 
@@ -59,4 +76,5 @@ At the end, summarize:
 - Do not hide missing requirements.
 - Do not claim DOCX/PPTX/PDF was generated if export failed.
 - Do not deliver PPTX without checking the page size.
+- Do not place final deliverables in the output root; use the managed folders.
 - Do not delete intermediate Markdown; it is useful for quick edits.

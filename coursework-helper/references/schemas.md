@@ -21,6 +21,22 @@ Created by `scripts/init_output_dir.py`.
   "length_hint": "1500 Chinese characters",
   "slide_size": "widescreen-16-9",
   "delivery_formats": ["md", "docx"],
+  "output_paths": {
+    "assignment_context": "outputs/name/00_admin/assignment_context.json",
+    "source_manifest": "outputs/name/01_sources/source_manifest.json",
+    "outline": "outputs/name/02_outline/outline.md",
+    "evidence_notes": "outputs/name/02_outline/evidence_notes.md",
+    "draft_paper": "outputs/name/03_drafts/draft_paper.md",
+    "draft_slides": "outputs/name/03_drafts/draft_slides.md",
+    "draft_script": "outputs/name/03_drafts/draft_script.md",
+    "final_paper": "outputs/name/04_final/final_paper.md",
+    "final_slides": "outputs/name/04_final/final_slides.md",
+    "final_script": "outputs/name/04_final/final_script.md",
+    "delivery_manifest": "outputs/name/00_admin/delivery_manifest.json",
+    "qa_report": "outputs/name/06_qa/qa_report.md",
+    "exports_dir": "outputs/name/05_exports",
+    "assets_dir": "outputs/name/assets"
+  },
   "notes": ""
 }
 ```
@@ -31,8 +47,32 @@ Allowed values:
 - `tone`: `normal-student`, `formal-academic`, `casual-reflection`, `presentation-friendly`
 - `slide_size`: `widescreen-16-9` by default; use another value only when the teacher requires it
 - `delivery_formats`: any of `md`, `pptx`, `docx`, `pdf`
+- `output_paths`: canonical destinations for all generated files
 
-## `source_manifest.json`
+## Output Directory Layout
+
+Generated coursework files must be organized by lifecycle stage:
+
+```text
+outputs/<assignment-name>/
+├── 00_admin/      # context and manifest files
+├── 01_sources/    # source index and extracted source notes
+├── 02_outline/    # outline and evidence notes
+├── 03_drafts/     # intermediate drafts
+├── 04_final/      # final Markdown deliverables
+├── 05_exports/    # PPTX, DOCX, PDF exports
+├── 06_qa/         # QA reports and checks
+└── assets/        # images or temporary visual assets
+```
+
+Rules:
+- Agents must prefer paths from `assignment_context.json.output_paths`.
+- Final Markdown belongs in `04_final/`.
+- Binary exports belong in `05_exports/`.
+- QA and validation reports belong in `06_qa/`.
+- Do not place generated deliverables in the output root.
+
+## `01_sources/source_manifest.json`
 
 Produced by `scripts/index_source_files.py`.
 
@@ -70,7 +110,7 @@ Categories:
 - `notes`: markdown/txt notes
 - `other`: review only when needed
 
-## `outline.md`
+## `02_outline/outline.md`
 
 ```markdown
 # <Assignment Title>
@@ -92,7 +132,7 @@ paper
 - ...
 ```
 
-## `evidence_notes.md`
+## `02_outline/evidence_notes.md`
 
 ```markdown
 # Evidence Notes — <Assignment Title>
@@ -111,9 +151,9 @@ Rules:
 
 Depending on `assignment_type`, agents write:
 
-- `final_paper.md`
-- `final_slides.md`
-- `final_script.md`
+- `04_final/final_paper.md`
+- `04_final/final_slides.md`
+- `04_final/final_script.md`
 
 For slide markdown, use:
 
@@ -126,13 +166,17 @@ Speaker notes:
 ...
 ```
 
-## `delivery_manifest.json`
+## `00_admin/delivery_manifest.json`
 
 ```json
 {
   "created_at": "2026-04-30T12:00:00",
   "requested_formats": ["md", "pptx", "docx"],
-  "delivered_files": ["final_slides.md", "final_slides.pptx", "final_script.md"],
+  "delivered_files": [
+    "04_final/final_slides.md",
+    "05_exports/final_slides.pptx",
+    "04_final/final_script.md"
+  ],
   "warnings": ["No teacher rubric was provided; used default structure."],
   "review_suggestions": ["Check whether the teacher requires references."],
   "evidence_notes": "evidence_notes.md"

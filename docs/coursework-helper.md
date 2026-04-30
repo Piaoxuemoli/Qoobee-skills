@@ -22,6 +22,12 @@ Intake → Index materials → Plan → Draft paper/slides/script → Polish and
 
 PPT 默认页面大小固定为 16:9 widescreen，13.333 x 7.5 英寸（33.867 x 19.05 cm）。除非老师明确要求其他尺寸，所有 PPTX 都按这个尺寸导出并检查。
 
+PPT 内容组织也会被检查：8 页以上必须有清晰 section，不能只是连续标题 + bullet；每页应包含角色、章节、版式、核心信息、可见内容、讲稿和设计说明。导出前可运行：
+
+```bash
+python coursework-helper/scripts/check_slides_md.py <output_dir>/04_final/final_slides.md
+```
+
 ## 适用场景 / When To Use
 
 可以直接这样说：
@@ -45,7 +51,7 @@ PPT 默认页面大小固定为 16:9 widescreen，13.333 x 7.5 英寸（33.867 x
 ```bash
 python coursework-helper/scripts/index_source_files.py \
   --inputs "./course-materials" \
-  --output "<output_dir>/source_manifest.json"
+  --output "<output_dir>/01_sources/source_manifest.json"
 ```
 
 材料会被分类为：
@@ -62,16 +68,32 @@ python coursework-helper/scripts/index_source_files.py \
 
 ```text
 coursework-helper/outputs/<assignment-name>/
-├── assignment_context.json
-├── source_manifest.json
-├── outline.md
-├── evidence_notes.md
-├── final_paper.md
-├── final_slides.md
-├── final_script.md
-├── delivery_manifest.json
+├── 00_admin/
+│   ├── assignment_context.json
+│   └── delivery_manifest.json
+├── 01_sources/
+│   └── source_manifest.json
+├── 02_outline/
+│   ├── outline.md
+│   └── evidence_notes.md
+├── 03_drafts/
+│   ├── draft_paper.md
+│   ├── draft_slides.md
+│   └── draft_script.md
+├── 04_final/
+│   ├── final_paper.md
+│   ├── final_slides.md
+│   └── final_script.md
+├── 05_exports/
+│   ├── final_paper.docx
+│   ├── final_slides.pptx
+│   └── final_report.pdf
+├── 06_qa/
+│   └── qa_report.md
 └── assets/
 ```
+
+`assignment_context.json` 中会记录 `output_paths`，后续 agent 应按这些路径写入文件，避免所有产物平铺在输出根目录。
 
 ## 子代理 / Agents
 
