@@ -85,7 +85,7 @@
 
 ## 使用说明
 
-- `[TO BE FILLED]` 占位符在 Phase 4 由 report-writer 代理替换为实际实验数据和文字分析。
+- `[TO BE FILLED]` 占位符在最终填充阶段由 report-writer 代理替换为实际实验数据和文字分析。
 - `[SCREENSHOT: stepN]` 占位符替换为对应的截图图片。
 - 个人信息字段从 `experiment_info.json` 自动填入。
 - 实验目的、设备、步骤从 `procedure_summary.md` 提取填入。

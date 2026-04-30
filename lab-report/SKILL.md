@@ -11,178 +11,228 @@ description: >
 
 # Lab Report Skill
 
-Automate the full experiment-report pipeline: extract procedures from source materials,
-generate a report template, execute the experiment with terminal screenshots, and fill
-in the final report with results.
+Automate experiment and course reports from source materials. The orchestrator owns the
+conversation, local profile setup, report-path selection, and phase transitions. Sub-agents
+do the specialized work: summarize materials, execute experiments, and write reports.
 
-## Overview
+## Architecture
 
-This skill uses three sub-agents to break down the report-writing process into a 4-phase
-pipeline. Each phase must complete and get user confirmation before the next begins.
+The skill is organized as a startup layer followed by one of three report paths.
 
-| Phase | Agent | What Happens |
-|-------|-------|--------------|
-| 0 — Setup | (none) | Initialize output directory |
-| 1 — Summarize | `agents/experiment-summarizer.md` | Extract procedure from files, collect personal info |
-| 2 — Template | `agents/report-writer.md` (template mode) | Generate report draft with placeholders |
-| 3 — Execute | `agents/experiment-runner.md` | Run experiment step-by-step, capture screenshots |
-| 4 — Complete | `agents/report-writer.md` (fill-in mode) | Fill placeholders with real data, finalize report |
-
-**Important:** Complete each phase fully and get user confirmation before moving to the next.
-Do not skip phases without asking the user.
-
-## Phase 0: Output Directory Setup
-
-Before any work begins, set up the output directory.
-
-1. Ask the user: "What should we name this experiment?" Suggest a short slug based on context
-   (e.g., `cuda-vector-add`, `chem-titration-lab3`, `ml-mnist-exp1`).
-2. Run the setup script:
-   ```bash
-   python lab-report/scripts/init_output_dir.py <experiment-name>
-   ```
-   The script creates `outputs/<experiment-name>/` with `screenshots/` and `raw_outputs/`
-   subdirectories, plus an `experiment_info.json` skeleton.
-3. If the script errors (invalid name, directory exists), resolve the issue with the user
-   and retry.
-
-Store the output directory path as `output_dir` for all subsequent phases:
+```text
+User request
+  -> Startup: load profile, choose mode, gather inputs, create output directory
+  -> Classify path:
+       standard-executable | data-provided | paper-only
+  -> Run the selected path
+  -> Deliver final_report.md and optional PDF conversion
 ```
+
+| Report path | Use when | Runner needed |
+|-------------|----------|---------------|
+| `standard-executable` | Materials contain concrete commands or executable steps | Yes |
+| `data-provided` | User already has result data, tables, screenshots, logs, or observations | No |
+| `paper-only` | The task is theoretical, reflective, or writeup-only | No |
+
+## Startup Layer
+
+### 1. Load Local Profile
+
+Run:
+
+```bash
+python lab-report/scripts/profile_config.py status
+```
+
+The profile is stored outside the repository:
+
+```text
+~/.qoobee-skills/lab-report/profile.json
+```
+
+If required fields are missing, ask for only those fields once, then save them:
+
+```bash
+python lab-report/scripts/profile_config.py write \
+  --student-name "..." \
+  --student-id "..." \
+  --class "..." \
+  --course "..." \
+  --instructor "..." \
+  --institution "..."
+```
+
+Do not ask for cached profile fields again unless the user asks to update them or the
+current report explicitly conflicts with them.
+
+### 2. Choose Confirmation Mode
+
+Ask once at startup:
+
+```text
+是否进入无需确认的自动模式？进入后我会自动推进模板、普通实验步骤和最终报告生成；只有缺少关键信息、命令失败或危险操作时才打断。
+```
+
+Set `run_mode`:
+
+- `manual`: review routine phase outputs before proceeding.
+- `auto`: skip routine phase/template/ordinary-step confirmations.
+
+Auto mode still stops for:
+
+- missing or unreadable source materials
+- ambiguous steps that cannot be executed or written about safely
+- command failures that block dependent steps
+- destructive or high-risk commands
+- unresolved placeholders or missing key data in the final report
+
+### 3. Gather Inputs and Classify Report Path
+
+Collect or infer:
+
+- `source_files`: lab manual, PPT, Word, PDF, images, logs, data files, or notes
+- `context`: user's natural-language task description
+- `report_type`: `standard-executable`, `data-provided`, or `paper-only`
+- `experiment_name`: slug for the output folder
+
+Prefer inference over extra questions. Ask only when classification is ambiguous or required
+inputs are missing.
+
+### 4. Initialize Output Directory
+
+Run:
+
+```bash
+python lab-report/scripts/init_output_dir.py <experiment-name> \
+  --report-type <report_type> \
+  --run-mode <run_mode> \
+  --source-files "<path1>|<path2>"
+```
+
+Store:
+
+```text
 output_dir = lab-report/outputs/<experiment-name>
 ```
 
-## Phase 1: Summarize Experiment
+The initializer creates `experiment_info.json`, `report_context.json`, `screenshots/`, and
+`raw_outputs/`. See `references/schemas.md` for required fields.
 
-**Goal:** Extract a structured procedure from source materials and collect personal metadata.
+## Path A: standard-executable
 
-1. Read `agents/experiment-summarizer.md` to load the sub-agent instructions.
-2. Ask the user for their experiment source files: "Please provide your lab manual, PPT,
-   Word document, PDF, or any other experiment materials (file paths)."
-3. Launch the experiment-summarizer sub-agent with these parameters:
-   - **source_files**: The file paths the user provided
-   - **output_dir**: The `output_dir` from Phase 0
-   - **context**: Any experiment description the user gave in conversation
-4. The agent will:
-   - Read and parse all source files (using strategies from `references/file-readers.md`)
-   - Present extracted experiment info to the user
-   - Collect personal metadata (name, student ID, class, date, instructor)
-   - Write `experiment_info.json` and `procedure_summary.md`
-5. After the agent completes, review its outputs with the user.
-   Confirm the procedure is correct and the personal info is accurate.
-6. **Do not proceed until the user confirms.** Accepted signals: "confirmed," "looks good,"
-   "OK," "yes," "correct."
+Use this path when the experiment has commands or steps that can be run.
 
-## Phase 2: Generate Report Template
+1. **Summarize materials**
+   - Read `agents/experiment-summarizer.md`.
+   - Inputs: `source_files`, `output_dir`, `context`, `report_context_path`,
+     `profile_status`, `run_mode`, `report_type`.
+   - Outputs: `procedure_summary.md`, updated `experiment_info.json`.
+   - Manual mode: review the summary. Auto mode: proceed if steps are concrete.
 
-**Goal:** Create a structured report draft with placeholders for results.
+2. **Generate report draft**
+   - Read `agents/report-writer.md`.
+   - Template mode inputs: `procedure_summary.md`, `experiment_info.json`,
+     `report_context.json`, `output_dir`, `run_mode`, language.
+   - Output: `report_draft.md`.
 
-1. Read `agents/report-writer.md` to load the sub-agent instructions.
-2. Launch the report-writer sub-agent in **template-generation mode** with:
-   - **procedure_summary_path**: `output_dir/procedure_summary.md`
-   - **experiment_info_path**: `output_dir/experiment_info.json`
-   - **output_dir**: Same `output_dir`
-   - **language**: `"zh"` if the user's conversation is in Chinese, `"en"` otherwise
-3. The agent will:
-   - Ask the user if they have a custom template (if yes, read and adapt it)
-   - If no template: use the default from `references/report-template-zh.md` or
-     `references/report-template-en.md`
-   - Fill in known info (header, objective, equipment, theory, procedure steps)
-   - Add `[TO BE FILLED]` placeholders for results, data, analysis, and conclusion
-   - Add `[SCREENSHOT: step<N>]` placeholders for screenshots
-   - Write `report_draft.md`
-4. Present the draft to the user. Ask: "Does this structure look right? Anything to change?"
-5. **Do not proceed until the user confirms the template.**
+3. **Execute experiment**
+   - Read `agents/experiment-runner.md`.
+   - Inputs: `procedure_summary.md`, `report_context.json`, `output_dir`,
+     `screenshot_preference`, `run_mode`.
+   - Outputs: `run_log.md`, `raw_outputs/`, `screenshots/`.
+   - Auto mode behaves like `run all` for ordinary commands.
 
-## Phase 3: Execute Experiment
+4. **Complete final report**
+   - Read `agents/report-writer.md` again.
+   - Fill-in mode inputs: draft, run log, raw outputs, screenshots, context.
+   - Output: `final_report.md`.
 
-**Goal:** Run the experiment step-by-step, capture outputs and screenshots.
+## Path B: data-provided
 
-1. Ask the user about screenshot preferences: "For screenshots, should I capture every step,
-   only key output steps (default), or no screenshots?"
-2. Read `agents/experiment-runner.md` to load the sub-agent instructions.
-3. Launch the experiment-runner sub-agent with:
-   - **procedure_summary_path**: `output_dir/procedure_summary.md`
-   - **output_dir**: Same `output_dir`
-   - **screenshot_preference**: `"key"` (default), `"all"`, or `"none"`
-4. The agent will:
-   - Present each step to the user for approval
-   - Accept "yes," "run all," "skip," or "modify: <cmd>" per step
-   - Execute commands and capture stdout/stderr
-   - Use the **terminal-screenshot** skill to render key outputs as PNGs
-   - Save screenshots to `screenshots/step<N>.png`
-   - Save raw outputs to `raw_outputs/step<N>.txt`
-   - Write `run_log.md` summarizing all steps
-5. The user can approve steps one at a time or say "run all" for hands-off execution.
-   Destructive commands ALWAYS require double confirmation regardless of mode.
-6. After all steps complete, confirm with the user: "Experiment complete? Proceed to
-   final report?"
+Use this path when the user already has data, screenshots, tables, logs, or observations.
 
-**If the experiment has no executable steps** (theoretical / paper-only experiment):
-Ask the user if they want to skip Phase 3. If yes, the user should provide their data
-and results directly. Then proceed to Phase 4 with user-provided data in place of run_log.
+1. Summarize source materials and imported data with `experiment-summarizer`.
+2. Generate `report_draft.md` with placeholders only where data is genuinely missing.
+3. Skip `experiment-runner`.
+4. Run `report-writer` fill-in mode using:
+   - user-provided data files
+   - copied screenshots, if any
+   - notes recorded in `report_context.json`
 
-## Phase 4: Complete Final Report
+If required result data is missing, stop and ask even in auto mode.
 
-**Goal:** Fill in all placeholders with actual results and produce the final report.
+## Path C: paper-only
 
-1. Read `agents/report-writer.md` (again) to load the sub-agent instructions.
-2. Launch the report-writer sub-agent in **fill-in mode** with:
-   - **draft_path**: `output_dir/report_draft.md`
-   - **run_log_path**: `output_dir/run_log.md`
-   - **screenshots_dir**: `output_dir/screenshots/`
-   - **raw_outputs_dir**: `output_dir/raw_outputs/`
-   - **output_path**: `output_dir/final_report.md`
-3. The agent will:
-   - Read the draft and identify all `[TO BE FILLED]` and `[SCREENSHOT: ...]` placeholders
-   - Extract actual data from `run_log.md` and raw outputs
-   - Fill in results, data tables, analysis, and conclusion
-   - Insert screenshots as inline images
-   - Write `final_report.md`
-4. Present the final report to the user.
-5. Ask: "Would you like any revisions, or is this final?"
-   - If revisions needed: note what the user wants changed, re-invoke the report-writer
-     in fill-in mode with updated instructions.
-   - If final: celebrate completion. Offer to convert to PDF: "Would you like me to
-     convert this to PDF? (requires pandoc: `pandoc final_report.md -o final_report.pdf`)"
+Use this path for theoretical reports, course reports, reflections, or non-executable
+writeups.
 
-## Handling Variations
+1. Use `experiment-summarizer` to turn materials and prompt context into a structured outline.
+2. Use `report-writer` template mode to create a draft without execution placeholders.
+3. Skip `experiment-runner`.
+4. Use `report-writer` fill-in mode to produce `final_report.md` from the outline and
+   source materials.
 
-### Skip Phase 3 (No Execution)
-If the user already has data or the experiment is theoretical:
-- Skip Phase 3, ask the user to provide their results.
-- In Phase 4, the report-writer works from user-provided data.
+Do not invent experiment results. If the task needs claims that are not supported by the
+materials, ask the user or mark them as not provided.
 
-### Partial Rerun
-If the user wants to redo a specific step:
-- Re-launch the experiment-runner for only that step.
-- Update `run_log.md` and redo Phase 4.
+## Safety and Failure Policy
 
-### Revise Report After Phase 4
-Re-invoke the report-writer in fill-in mode with specific revision instructions.
+### Ordinary confirmations
 
-## Output Directory Structure
+Manual mode asks before phase transitions and ordinary command execution. Auto mode does not.
 
-All generated content goes under `outputs/<experiment-name>/`. This directory is gitignored
-— it is strictly separated from the skill's own source code.
+### Blocking failures
 
-```
+Stop and ask the user when:
+
+- a source file cannot be read and no fallback content exists
+- a command fails and later steps depend on its output
+- a required dataset/result/table is absent
+- final report generation would leave unresolved placeholders
+
+### Non-blocking failures
+
+Record and continue when:
+
+- optional screenshots cannot be rendered
+- a nonessential setup command fails but later required data already exists
+- optional metadata is missing and the report can still be correct without it
+
+### Destructive or high-risk commands
+
+Always require explicit confirmation, even in auto mode:
+
+- deletion or formatting: `rm`, `rmdir`, `del`, `format`, `dd`, `mkfs`
+- privilege escalation: `sudo`, `su`, root shell
+- permission ownership changes: `chmod 777`, `chown`
+- system state changes: `shutdown`, `reboot`, `poweroff`
+- destructive database operations: `DROP`, `DELETE`, `TRUNCATE`
+- global package installation or environment mutation
+
+Never run destructive commands outside the project directory without explicit permission.
+
+## Output Structure
+
+All generated content goes under `lab-report/outputs/<experiment-name>/`. This directory is
+gitignored and must stay separate from skill source files.
+
+```text
 outputs/<experiment-name>/
-├── experiment_info.json     # Personal metadata
-├── procedure_summary.md     # Structured procedure
-├── report_draft.md          # Template with placeholders
-├── run_log.md               # Step-by-step execution record
-├── final_report.md          # Completed report
+├── report_context.json
+├── experiment_info.json
+├── procedure_summary.md
+├── report_draft.md
+├── run_log.md
+├── final_report.md
 ├── screenshots/
-│   └── step<N>.png          # Terminal screenshots
 └── raw_outputs/
-    └── step<N>.txt           # Raw command outputs
 ```
 
-**Never write generated content to `agents/`, `references/`, `scripts/`, or the skill root.**
+Never write generated content to `agents/`, `references/`, `scripts/`, or the skill root.
 
 ## Dependencies
 
-- **terminal-screenshot skill**: Required for Phase 3 screenshot capture.
-- **Python**: Required for `scripts/init_output_dir.py`.
-- **File reading tools**: `pdftotext`, `python-docx`, `python-pptx`, `pandoc` (auto-detected,
-  fall back gracefully if missing).
+- **terminal-screenshot skill**: required for screenshot capture in `standard-executable`.
+- **Python**: required for `scripts/init_output_dir.py` and `scripts/profile_config.py`.
+- **File reading tools**: `pdftotext`, `python-docx`, `python-pptx`, `pandoc` when available;
+  fall back gracefully if missing.

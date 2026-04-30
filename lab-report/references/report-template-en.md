@@ -85,7 +85,7 @@ Use this template when the user does not provide a custom template.
 
 ## Usage Notes
 
-- `[TO BE FILLED]` placeholders are replaced by the report-writer agent in Phase 4 with actual data and analysis.
+- `[TO BE FILLED]` placeholders are replaced by the report-writer agent during final fill-in with actual data and analysis.
 - `[SCREENSHOT: stepN]` placeholders are replaced with inline screenshots.
 - Personal info fields are auto-filled from `experiment_info.json`.
 - Objective, equipment, and procedure are filled from `procedure_summary.md`.
