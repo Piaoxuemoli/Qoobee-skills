@@ -6,6 +6,10 @@ __pycache__/
 lab-report/outputs/*
 !lab-report/outputs/.gitkeep
 
+# Coursework-helper outputs (user-generated, not skill code)
+coursework-helper/outputs/*
+!coursework-helper/outputs/.gitkeep
+
 .cursor/
 
 # Terminal screenshot outputs (user-generated, not skill code)
