@@ -21,11 +21,11 @@ The skill is organized as a startup layer followed by one of three report paths.
 
 ```text
 User request
-  -> Startup: load profile, choose mode, gather inputs, create output directory
+  -> Startup: intake wizard, load profile, choose mode, index materials, create output directory
   -> Classify path:
        standard-executable | data-provided | paper-only
   -> Run the selected path
-  -> Deliver final_report.md and optional PDF conversion
+  -> Deliver final_report.md plus optional DOCX/PDF and evidence map
 ```
 
 | Report path | Use when | Runner needed |
@@ -36,7 +36,28 @@ User request
 
 ## Startup Layer
 
-### 1. Load Local Profile
+### 1. Run Student-Friendly Intake
+
+Start with the user's natural request, file attachments, or material directory. Prefer
+inference over forms. Only ask short questions when the answer changes the workflow.
+
+Infer or ask for:
+
+| Decision | Default |
+|----------|---------|
+| Has source materials? | use attached files or paths from the request |
+| Experiment already completed? | infer from result files/logs/screenshots; otherwise no |
+| Should commands be executed? | yes for concrete executable manuals; no for provided-data or paper-only |
+| Report language | Chinese when the request is Chinese, English when the request is English |
+| Delivery formats | `md`, plus `docx`/`pdf` if requested by the user or course template |
+
+Useful startup prompt when needed:
+
+```text
+我可以直接整理材料并生成报告。请确认：1) 是否需要我运行实验命令；2) 最终是否要 Word/PDF；3) 是否要记住这门课的模板？
+```
+
+### 2. Load Local Profile
 
 Run:
 
@@ -65,7 +86,7 @@ python lab-report/scripts/profile_config.py write \
 Do not ask for cached profile fields again unless the user asks to update them or the
 current report explicitly conflicts with them.
 
-### 2. Choose Confirmation Mode
+### 3. Choose Confirmation Mode
 
 Ask once at startup:
 
@@ -82,23 +103,43 @@ Auto mode still stops for:
 
 - missing or unreadable source materials
 - ambiguous steps that cannot be executed or written about safely
-- command failures that block dependent steps
 - destructive or high-risk commands
 - unresolved placeholders or missing key data in the final report
 
-### 3. Gather Inputs and Classify Report Path
+In auto mode, ordinary command failures are recorded, skipped when possible, and summarized in
+final delivery instead of repeatedly interrupting the user. Manual mode pauses and asks whether
+to retry, modify, skip, or use user-provided results.
+
+Set `failure_policy`:
+
+- `auto-skip`: default for auto mode.
+- `manual-pause`: default for manual mode.
+
+### 4. Gather Inputs and Classify Report Path
 
 Collect or infer:
 
 - `source_files`: lab manual, PPT, Word, PDF, images, logs, data files, or notes
+- `source_manifest_path`: generated when inputs include directories or multiple materials
 - `context`: user's natural-language task description
 - `report_type`: `standard-executable`, `data-provided`, or `paper-only`
 - `experiment_name`: slug for the output folder
+- `delivery_formats`: `md`, optionally `docx`, `pdf`
+- `course_template_id`: matched reusable course template if any
 
 Prefer inference over extra questions. Ask only when classification is ambiguous or required
 inputs are missing.
 
-### 4. Check Official File Skills
+If the user provides a directory or several files, plan to create:
+
+```text
+lab-report/outputs/<experiment-name>/source_manifest.json
+```
+
+Create the file after the output directory is initialized. Use the manifest to separate
+manuals, slides, data, images, logs, code, and other files.
+
+### 5. Check Official File Skills
 
 Before parsing source files, check whether the user has the official Anthropic document
 skills required for those file types:
@@ -131,7 +172,26 @@ This controlled startup dependency repair is allowed because it is limited to of
 Anthropic document skills needed to read user-provided files. Do not use it to install
 unrelated skills or project dependencies.
 
-### 5. Initialize Output Directory
+### 6. Match Course Template
+
+If the profile or materials identify a course, check reusable course templates:
+
+```bash
+python lab-report/scripts/course_templates.py get --course "<course-name>"
+```
+
+If the user says to remember a template for this course, save it:
+
+```bash
+python lab-report/scripts/course_templates.py save \
+  --course "<course-name>" \
+  --template-path "<template.md>"
+```
+
+Use the matched `course_template_id` in `report_context.json`. Do not store experiment
+results in course templates.
+
+### 7. Initialize Output Directory
 
 Run:
 
@@ -139,7 +199,11 @@ Run:
 python lab-report/scripts/init_output_dir.py <experiment-name> \
   --report-type <report_type> \
   --run-mode <run_mode> \
-  --source-files "<path1>|<path2>"
+  --source-files "<path1>|<path2>" \
+  --source-manifest-path "<manifest-path>" \
+  --delivery-formats "md|docx|pdf" \
+  --course-template-id "<template-id>" \
+  --failure-policy <failure_policy>
 ```
 
 Store:
@@ -149,7 +213,16 @@ output_dir = lab-report/outputs/<experiment-name>
 ```
 
 The initializer creates `experiment_info.json`, `report_context.json`, `screenshots/`, and
-`raw_outputs/`. See `references/schemas.md` for required fields.
+`raw_outputs/`. Material indexing may also create `source_manifest.json`. See
+`references/schemas.md` for required fields.
+
+After initialization, create the material manifest when needed:
+
+```bash
+python lab-report/scripts/index_source_files.py \
+  --inputs "<path1>|<path2>" \
+  --output "<output_dir>/source_manifest.json"
+```
 
 ## Path A: standard-executable
 
@@ -157,9 +230,9 @@ Use this path when the experiment has commands or steps that can be run.
 
 1. **Summarize materials**
    - Read `agents/experiment-summarizer.md`.
-   - Inputs: `source_files`, `output_dir`, `context`, `report_context_path`,
-     `profile_status`, `run_mode`, `report_type`.
-   - Outputs: `procedure_summary.md`, updated `experiment_info.json`.
+   - Inputs: `source_files`, `source_manifest.json`, `output_dir`, `context`,
+     `report_context_path`, `profile_status`, `run_mode`, `report_type`.
+   - Outputs: `procedure_summary.md`, `evidence_map.md`, updated `experiment_info.json`.
    - Manual mode: review the summary. Auto mode: proceed if steps are concrete.
 
 2. **Generate report draft**
@@ -171,14 +244,15 @@ Use this path when the experiment has commands or steps that can be run.
 3. **Execute experiment**
    - Read `agents/experiment-runner.md`.
    - Inputs: `procedure_summary.md`, `report_context.json`, `output_dir`,
-     `screenshot_preference`, `run_mode`.
-   - Outputs: `run_log.md`, `raw_outputs/`, `screenshots/`.
-   - Auto mode behaves like `run all` for ordinary commands.
+     `screenshot_preference`, `run_mode`, `failure_policy`.
+   - Outputs: `run_log.md`, updated `evidence_map.md`, `raw_outputs/`, `screenshots/`.
+   - Auto mode behaves like `run all` for ordinary commands and skips failed independent
+     steps when possible.
 
 4. **Complete final report**
    - Read `agents/report-writer.md` again.
-   - Fill-in mode inputs: draft, run log, raw outputs, screenshots, context.
-   - Output: `final_report.md`.
+   - Fill-in mode inputs: draft, run log, raw outputs, screenshots, context, evidence map.
+   - Output: `final_report.md`, optional DOCX/PDF, `delivery_manifest.json`.
 
 ## Path B: data-provided
 
@@ -219,9 +293,9 @@ Manual mode asks before phase transitions and ordinary command execution. Auto m
 Stop and ask the user when:
 
 - a source file cannot be read and no fallback content exists
-- a command fails and later steps depend on its output
 - a required dataset/result/table is absent
 - final report generation would leave unresolved placeholders
+- manual mode command execution fails and the next action needs user choice
 
 ### Non-blocking failures
 
@@ -230,6 +304,8 @@ Record and continue when:
 - optional screenshots cannot be rendered
 - a nonessential setup command fails but later required data already exists
 - optional metadata is missing and the report can still be correct without it
+- auto mode command execution fails but later independent steps and the report can still be
+  completed honestly
 
 ### Destructive or high-risk commands
 
@@ -241,7 +317,7 @@ Always require explicit confirmation, even in auto mode:
 - system state changes: `shutdown`, `reboot`, `poweroff`
 - destructive database operations: `DROP`, `DELETE`, `TRUNCATE`
 - global package installation or environment mutation, except the controlled official
-  document-skill repair in Startup Step 4
+  document-skill repair in Startup Step 5
 
 Never run destructive commands outside the project directory without explicit permission.
 
@@ -253,11 +329,14 @@ gitignored and must stay separate from skill source files.
 ```text
 outputs/<experiment-name>/
 ├── report_context.json
+├── source_manifest.json
 ├── experiment_info.json
 ├── procedure_summary.md
+├── evidence_map.md
 ├── report_draft.md
 ├── run_log.md
 ├── final_report.md
+├── delivery_manifest.json
 ├── screenshots/
 └── raw_outputs/
 ```
@@ -268,5 +347,6 @@ Never write generated content to `agents/`, `references/`, `scripts/`, or the sk
 
 - **terminal-screenshot skill**: required for screenshot capture in `standard-executable`.
 - **Python**: required for `scripts/init_output_dir.py` and `scripts/profile_config.py`.
+- **Official document skills**: `pdf`, `docx`, `pptx`, `xlsx` for reading and final exports.
 - **File reading tools**: `pdftotext`, `python-docx`, `python-pptx`, `pandoc` when available;
   fall back gracefully if missing.

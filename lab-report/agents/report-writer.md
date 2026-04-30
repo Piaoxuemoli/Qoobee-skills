@@ -22,6 +22,7 @@ Read `references/schemas.md` before writing outputs.
 - **language**: `"zh"` or `"en"`
 - **run_mode**: `"manual"` or `"auto"`
 - **report_type**: `standard-executable`, `data-provided`, or `paper-only`
+- **course_template_id**: Optional matched reusable course template id from `report_context.json`
 
 ### Fill-in mode
 
@@ -32,7 +33,9 @@ Read `references/schemas.md` before writing outputs.
 - **run_log_path**: Path to `run_log.md`, optional for non-executable paths
 - **screenshots_dir**: Path to `screenshots/`
 - **raw_outputs_dir**: Path to `raw_outputs/`
+- **evidence_map_path**: Path to `evidence_map.md`
 - **output_path**: Path for `final_report.md`
+- **delivery_formats**: List containing `md`, `docx`, and/or `pdf`
 - **run_mode**: `"manual"` or `"auto"`
 - **report_type**: `standard-executable`, `data-provided`, or `paper-only`
 
@@ -43,7 +46,11 @@ Read `references/schemas.md` before writing outputs.
 Manual mode: ask whether the user has a specific report template only if no template was
 already provided.
 
-Auto mode: do not ask. Use a provided custom template if one exists; otherwise use:
+Auto mode: do not ask. Use templates in this order:
+
+1. Matched course template from `course_templates.json`
+2. One-time user-provided template
+3. Built-in defaults:
 
 - `references/report-template-zh.md` for Chinese reports
 - `references/report-template-en.md` for English reports
@@ -86,12 +93,16 @@ Use evidence according to `report_type`:
   `report_context.json` and `procedure_summary.md`.
 - `paper-only`: use source material summaries and writing outline.
 
+Always read `evidence_map.md` if it exists. When adding a claim, result, chart/table, or
+screenshot to the report, add or update the matching evidence-map row.
+
 ### Step 2: Fill Results and Evidence
 
 For `standard-executable`:
 - Extract measured values from run logs and raw outputs.
 - Insert screenshots with captions when available.
-- Explain failed or skipped steps honestly.
+- Explain failed or skipped steps honestly, especially auto-mode skips that did not interrupt
+  the user.
 
 For `data-provided`:
 - Convert supplied observations/tables/logs into report results.
@@ -124,10 +135,32 @@ Before finishing, verify:
 If any key placeholder cannot be resolved, stop and report the missing data instead of
 writing a fake final report.
 
+### Step 5: Export Delivery Formats
+
+Read `delivery_formats` from `report_context.json`.
+
+- Always keep `final_report.md`.
+- If `docx` is requested, use the official `docx` skill to create `final_report.docx`.
+- If `pdf` is requested, use the official `pdf` skill to create `final_report.pdf`.
+- If export fails, keep the Markdown report, record the failure in `delivery_manifest.json`,
+  and do not hide the warning.
+
+### Step 6: Delivery Manifest
+
+Write `delivery_manifest.json` with:
+
+- requested formats
+- delivered files
+- warnings for failed/skipped commands, missing optional screenshots, unsupported files, or
+  export failures
+- unresolved required items, if any
+- pointer to `evidence_map.md`
+
 ## Outputs
 
 - Template mode: `outputs/<experiment>/report_draft.md`
-- Fill-in mode: `outputs/<experiment>/final_report.md`
+- Fill-in mode: `outputs/<experiment>/final_report.md`, optional DOCX/PDF exports,
+  `outputs/<experiment>/delivery_manifest.json`, updated `evidence_map.md`
 
 ## Behavior Rules
 
@@ -135,3 +168,4 @@ writing a fake final report.
 - If a screenshot is missing, skip it gracefully unless it is required by the user's template.
 - Use the user's language consistently.
 - Auto mode skips routine confirmation only; it does not relax evidence requirements.
+- Final delivery should tell the student what was generated and what was skipped or failed.

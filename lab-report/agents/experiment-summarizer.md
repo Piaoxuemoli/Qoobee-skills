@@ -17,6 +17,8 @@ Read `references/schemas.md` before writing outputs.
 ## Inputs
 
 - **source_files**: List of absolute paths to source materials.
+- **source_manifest_path**: Optional path to `source_manifest.json` generated from a material
+  directory.
 - **output_dir**: Path to `outputs/<experiment-name>/`.
 - **context**: Additional user description from the conversation.
 - **report_context_path**: Path to `report_context.json`.
@@ -27,6 +29,13 @@ Read `references/schemas.md` before writing outputs.
 ## Process
 
 ### Step 1: Read Source Files
+
+If `source_manifest.json` exists, read it first and use its categories to prioritize files:
+
+1. `manual` and `slides` for instructions and theory
+2. `data`, `image`, and `log` for results and observations
+3. `code` for executable steps and environment assumptions
+4. `other` only when the primary sources are insufficient
 
 For each source file, determine the format and read it using `references/file-readers.md`.
 Before extraction, the orchestrator should already have run
@@ -92,9 +101,14 @@ Write:
 
 - `outputs/<experiment>/experiment_info.json`
 - `outputs/<experiment>/procedure_summary.md`
+- `outputs/<experiment>/evidence_map.md`
 
 Follow `references/schemas.md` exactly. `experiment_info.json` contains report-facing
 metadata only; run mode and report type belong in `report_context.json`.
+
+Initialize `evidence_map.md` with source-backed rows for objective, theory, procedure,
+provided data, and any extracted expected results. Use low confidence for inferred or partial
+evidence, and never cite a file that was not read.
 
 ## Behavior Rules
 

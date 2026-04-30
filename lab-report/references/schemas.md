@@ -43,8 +43,12 @@ Created in every output directory by `scripts/init_output_dir.py`.
   "source_files": [
     "C:/path/to/manual.pdf"
   ],
+  "source_manifest_path": "C:/path/to/source_manifest.json",
   "language": "zh",
   "screenshot_preference": "key",
+  "delivery_formats": ["md", "docx", "pdf"],
+  "course_template_id": "computer-network",
+  "failure_policy": "auto-skip",
   "notes": ""
 }
 ```
@@ -54,12 +58,61 @@ Allowed values:
 - `run_mode`: `manual`, `auto`
 - `language`: `zh`, `en`, or empty when not inferred yet
 - `screenshot_preference`: `key`, `all`, `none`
+- `delivery_formats`: any of `md`, `docx`, `pdf`
+- `failure_policy`: `auto-skip`, `manual-pause`
 
 Rules:
 - `report_context.json` records the current run's control decisions.
 - Do not put personal profile fields here except profile status/path.
 - Agents should read this file when they need run mode, report type, source files, or
   screenshot preference.
+- In auto mode, `failure_policy` defaults to `auto-skip`; in manual mode it defaults to
+  `manual-pause`.
+
+## `source_manifest.json`
+
+Produced by `scripts/index_source_files.py` when the user provides files or a material
+directory.
+
+```json
+{
+  "created_at": "2026-04-30T12:00:00",
+  "input_paths": ["C:/course/lab3"],
+  "files": [
+    {
+      "path": "C:/course/lab3/manual.pdf",
+      "name": "manual.pdf",
+      "extension": ".pdf",
+      "category": "manual",
+      "size_bytes": 123456
+    }
+  ],
+  "counts": {
+    "manual": 1,
+    "slides": 0,
+    "data": 1,
+    "image": 2,
+    "log": 0,
+    "code": 3,
+    "other": 0
+  }
+}
+```
+
+Categories:
+- `manual`: lab instructions or prose source material
+- `slides`: presentation decks
+- `data`: result tables, measurements, structured data, JSON exports
+- `image`: screenshots, photos, scanned pages
+- `log`: terminal or program logs
+- `code`: experiment source code or scripts
+- `other`: files that should be reviewed only if needed
+
+Rules:
+- The manifest is an index, not extracted content.
+- `experiment-summarizer` decides which files are evidence-bearing after reading them.
+- Missing paths are warnings during indexing; unreadable required files become blocking
+  material issues during summarization.
 
 ## `experiment_info.json`
 
@@ -156,7 +209,29 @@ Produced only for `standard-executable` when commands are run.
 Rules:
 - Record exactly what happened.
 - Do not rewrite command output to make it look successful.
-- If a failure is `blocking`, stop the run and ask the user how to proceed.
+- If a failure is `blocking` and `failure_policy` is `manual-pause`, stop and ask the user how
+  to proceed.
+- If a failure is `blocking` and `failure_policy` is `auto-skip`, record failed/skipped status,
+  continue independent later steps, and surface the issue in `delivery_manifest.json`.
+
+## `evidence_map.md`
+
+Produced incrementally by `experiment-summarizer`, `experiment-runner`, and `report-writer`.
+
+```markdown
+# Evidence Map — <Experiment Title>
+
+| Report section | Claim or content | Evidence source | Confidence | Notes |
+|----------------|------------------|-----------------|------------|-------|
+| Objective | ... | manual.pdf page 1 | high | extracted from lab manual |
+| Results | ... | raw_outputs/step2.txt | medium | command succeeded |
+| Analysis | ... | data.csv + run_log.md | high | calculated from provided data |
+```
+
+Rules:
+- Every important result, conclusion, table, and screenshot should have a source.
+- Use `low` confidence for partial, inferred, or failed-step evidence.
+- Do not cite nonexistent files or unsupported claims.
 
 ## `report_draft.md`
 
@@ -177,3 +252,58 @@ Rules:
 - Must only use evidence from source materials, provided data, run logs, raw outputs, or user
   corrections.
 - If key evidence is missing, stop and ask instead of inventing it.
+
+## `course_templates.json`
+
+Stored outside the repository:
+
+```text
+~/.qoobee-skills/lab-report/course_templates.json
+```
+
+```json
+{
+  "templates": [
+    {
+      "id": "computer-network",
+      "course": "计算机网络",
+      "aliases": ["计网"],
+      "template_path": "C:/templates/network-lab.md",
+      "updated_at": "2026-04-30T12:00:00"
+    }
+  ]
+}
+```
+
+Rules:
+- `course_templates.json` stores reusable report-structure preferences only.
+- Course templates must not store experiment results.
+- `report-writer` should prefer the matched course template, then a user-provided one-time
+  template, then the built-in default template.
+
+## `delivery_manifest.json`
+
+Produced at final delivery.
+
+```json
+{
+  "created_at": "2026-04-30T12:00:00",
+  "requested_formats": ["md", "docx", "pdf"],
+  "delivered_files": [
+    "final_report.md",
+    "final_report.docx",
+    "final_report.pdf"
+  ],
+  "warnings": [
+    "Step 3 failed and was skipped in auto mode."
+  ],
+  "unresolved_items": [],
+  "evidence_map": "evidence_map.md"
+}
+```
+
+Rules:
+- Include every generated deliverable path.
+- Summarize skipped commands, missing optional screenshots, unsupported files, and export
+  failures.
+- `unresolved_items` must be empty only when the final report has no unresolved required data.

@@ -20,6 +20,7 @@ You are the **Experiment Runner**. Your job is to:
 - **output_dir**: Path to `outputs/<experiment-name>/`
 - **screenshot_preference**: `all`, `key`, or `none`
 - **run_mode**: `manual` or `auto`
+- **failure_policy**: `manual-pause` or `auto-skip`, usually read from `report_context.json`
 
 ## Process
 
@@ -57,11 +58,13 @@ If a command triggers a high-risk signal:
 
 Manual mode:
 - Ask before each ordinary command.
-- Accept `yes`, `run all`, `skip`, or `modify: <new command>`.
+- Accept `yes`, `run all`, `skip`, `modify: <new command>`, or `I will provide results`.
 
 Auto mode:
 - Treat ordinary commands as approved.
-- Continue sequentially until success, a blocking failure, or a high-risk command.
+- Continue sequentially until success or a high-risk command.
+- If an ordinary command fails, record it honestly, mark dependent steps as skipped when their
+  inputs are unavailable, and continue independent later steps.
 
 For every command:
 
@@ -72,7 +75,10 @@ For every command:
    - `none`: command succeeded
    - `non-blocking`: failed but later steps can still proceed
    - `blocking`: failed and later steps depend on it
-5. Stop on blocking failures and ask the user how to proceed.
+5. Handle blocking failures by policy:
+   - `manual-pause`: stop and ask whether to retry, modify, skip, or use user-provided results.
+   - `auto-skip`: record the failure, skip dependent steps that cannot run, and continue
+     independent steps. The final delivery must summarize the failure.
 
 ### Step 4: Screenshots
 
@@ -107,15 +113,27 @@ Append each step in this structure:
 - **Notes:** ...
 ```
 
+### Step 6: Evidence Map Updates
+
+Append run evidence to `evidence_map.md` when available:
+
+- successful commands and their raw output paths
+- failed or skipped steps and why they are missing
+- screenshot paths used as visual evidence
+- low-confidence evidence when a step failed but partial output exists
+
 ## Outputs
 
 - `outputs/<experiment>/run_log.md`
 - `outputs/<experiment>/raw_outputs/step<N>.txt`
 - `outputs/<experiment>/screenshots/step<N>_<description>.png`
+- updated `outputs/<experiment>/evidence_map.md`
 
 ## Behavior Rules
 
 - Do not run commands for `data-provided` or `paper-only` paths.
 - Record exactly what happened; do not clean up failures to make the run look successful.
+- In auto mode, ordinary failures should be quiet during execution and visible in the final
+  delivery summary.
 - If the user says to stop, stop immediately and preserve the partial run log.
 - Do not proceed to final report yourself; the orchestrator handles transitions.
