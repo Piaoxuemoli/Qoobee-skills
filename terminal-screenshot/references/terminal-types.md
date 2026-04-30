@@ -76,7 +76,109 @@ Later-generation monochrome CRT. Clean, high-contrast look.
 
 ---
 
-## 4. Modern Dark Terminal (GNOME / generic Linux)
+## 4. Remote Linux SSH Server Session
+
+This is the default for experiment reports, lab reports, GPU output, CI logs, and anything
+that looks like real work on a remote machine. A server does not have its own special GUI
+in the screenshot; it appears inside a local terminal window through SSH.
+
+| Property | Value |
+|----------|-------|
+| Background | `#0B1020` or `#111827` for a modern ops terminal |
+| Foreground | `#D1D5DB` |
+| Prompt user | `#7DD3FC` cyan |
+| Prompt host | `#A78BFA` violet |
+| Prompt path | `#FBBF24` amber |
+| Root prompt | `#F87171` red, ending in `#` |
+| Command | `#F9FAFB` |
+| Output | `#D1D5DB` |
+| Dim metadata | `#6B7280` |
+| Success | `#34D399` |
+| Warning | `#FBBF24` |
+| Error/Stderr | `#F87171` |
+
+**Prompt grammar:**
+- Normal user: `ubuntu@gpu-a100-01:~/train$`
+- Root shell: `root@prod-api-02:/var/log#`
+- Conda/env prefix: `(base) ubuntu@gpu-a100-01:~/project$`
+- SSH entry should look like:
+  `PS C:\Users\qoobee> ssh ubuntu@gpu-a100-01`
+  then remote prompt begins on following lines.
+
+**Window Chrome:** Use the local host terminal chrome if known. If the user is on Windows,
+use Windows Terminal with a tab title like `ubuntu@gpu-a100-01`. If the user is on macOS,
+use Terminal.app with a centered title like `ubuntu@gpu-a100-01 — ssh — 100x30`. If unknown,
+use a neutral GNOME-style frame.
+
+**CSS classes:** `terminal-ssh-server`, `ssh-titlebar`, `ssh-prompt`, `user`, `host`, `path`,
+`env`, `ok`, `warn`, `err`, `dim`
+
+---
+
+## 5. Windows Terminal PowerShell 7
+
+Use for local Windows commands and PowerShell transcripts. This preset should feel like
+Windows 11 Terminal running PowerShell 7, not a Linux terminal with a `PS>` string pasted in.
+
+| Property | Value |
+|----------|-------|
+| Background | `#0C0C0C` |
+| Foreground | `#CCCCCC` |
+| Tab/titlebar | `#202020` / active tab `#0C0C0C` |
+| Accent | `#0078D4` or PowerShell blue `#3B78FF` |
+| Prompt | `#F2F2F2` |
+| Path in prompt | `#F9F1A5` |
+| Command token | `#F9F1A5` |
+| Parameter token | `#9CDCFE` |
+| String token | `#CE9178` |
+| Number token | `#B5CEA8` |
+| Comment token | `#6A9955` |
+| Error/Stderr | `#F14C4C` |
+
+**Prompt grammar:**
+- `PS C:\Users\qoobee\Desktop\Qoobee-skills>`
+- `PS C:\Users\qoobee\Desktop\Qoobee-skills [master ≡]>` when git context is useful
+- Continuation prompt: `>>`
+
+**Window Chrome:** Windows Terminal tab strip with a PowerShell icon/title, plus `+`, dropdown
+chevron, and Windows caption buttons. Use Cascadia Mono first.
+
+**CSS classes:** `terminal-windows-pwsh`, `win-titlebar`, `win-tab`, `ps-command`,
+`ps-param`, `ps-string`, `ps-number`, `ps-comment`, `cursor`
+
+---
+
+## 6. macOS Terminal zsh
+
+Use for local macOS development commands. The screenshot should look like Terminal.app or
+iTerm-style zsh, with traffic-light controls and a prompt ending in `%`.
+
+| Property | Value |
+|----------|-------|
+| Background | `#1D1F21` |
+| Foreground | `#C5C8C6` |
+| Titlebar | `#2D2D2D` |
+| Prompt user/host | `#81A2BE` |
+| Prompt path | `#B5BD68` |
+| Command | `#FFFFFF` |
+| Output | `#C5C8C6` |
+| Dim metadata | `#7C7C7C` |
+| Error/Stderr | `#CC6666` |
+
+**Prompt grammar:**
+- `qoobee@MacBook-Pro Qoobee-skills %`
+- `MacBook-Pro:Qoobee-skills qoobee$` only when the content clearly comes from older bash
+- For Homebrew, Xcode, and launchctl screenshots, prefer zsh `%`.
+
+**Window Chrome:** macOS traffic lights at left, centered title text, subtle 1px separator,
+Menlo/SF Mono font stack.
+
+**CSS classes:** `terminal-macos-zsh`, `macos-titlebar`, `mac-prompt`, `mac-userhost`,
+`mac-path`, `cursor`
+
+---
+
+## 7. Modern Dark Terminal (GNOME / generic Linux)
 
 Clean, professional. The default for most server screenshots.
 
@@ -115,7 +217,7 @@ Clean, professional. The default for most server screenshots.
 
 ---
 
-## 5. macOS Terminal Pro
+## 8. macOS Terminal Pro
 
 Apple's default Terminal.app dark theme.
 
@@ -150,7 +252,7 @@ title text centered ("username — -zsh — 80x24"), dark background `#323233`.
 
 ---
 
-## 6. Windows Terminal Campbell
+## 9. Windows Terminal Campbell
 
 Microsoft's default Windows Terminal dark theme.
 
@@ -185,7 +287,7 @@ minimize/maximize/close buttons on the right. Tab has a colored underline accent
 
 ---
 
-## 7. Solarized Dark
+## 10. Solarized Dark
 
 Ethan Schoonover's carefully balanced, eye-friendly scheme.
 
@@ -209,7 +311,7 @@ Ethan Schoonover's carefully balanced, eye-friendly scheme.
 
 ---
 
-## 8. xterm (Classic Light)
+## 11. xterm (Classic Light)
 
 Original X11 terminal — white background, black text. Useful for "clean print" screenshots.
 
@@ -232,34 +334,41 @@ Original X11 terminal — white background, black text. Useful for "clean print"
 When the user does not explicitly specify a terminal type, apply these rules in order:
 
 ```
-1. Content contains GPU/CUDA keywords (nvidia-smi, nvcc, nvprof, cudaMalloc, Tesla, GPU)
-   → Modern Dark Terminal
+1. Content contains an explicit PowerShell prompt (`PS C:\...>`, `PS /...>`), PowerShell
+   cmdlets (`Get-ChildItem`, `Set-ExecutionPolicy`, `Invoke-WebRequest`), or Windows paths
+   with PowerShell syntax
+   → Windows Terminal PowerShell 7
 
-2. Content contains Windows commands (dir, ipconfig, netstat, chkdsk, PowerShell prompt)
-   → Windows Terminal Campbell
+2. Content contains macOS commands (`brew`, `xcodebuild`, `launchctl`, `pbcopy`,
+   `~/Library`) or a zsh prompt ending in `%`
+   → macOS Terminal zsh
 
-3. Content contains macOS commands (brew, launchctl, pbcopy, osascript)
-   → macOS Terminal Pro
+3. Content contains SSH, `user@host:path$`, `sudo`, `systemctl`, `apt`, `journalctl`,
+   CUDA/GPU keywords (`nvidia-smi`, `nvcc`, `torchrun`, `deepspeed`, `Tesla`, `A100`)
+   → Remote Linux SSH Server Session
 
-4. Content is a simple "ls -la", "cat file", or small bash output
+4. Content contains Windows `cmd.exe` commands (`dir`, `ipconfig`, `netstat`, `chkdsk`)
+   without PowerShell syntax
+   → Windows Terminal Campbell with cmd tab title
+
+5. Content is a simple "ls -la", "cat file", or small bash output
    → If retro/hacker context: Green Phosphor CRT
-   → Otherwise: Modern Dark Terminal
+   → Otherwise: Remote Linux SSH Server Session for reports, Modern Dark Terminal for generic docs
 
-5. User is writing an experiment report, technical documentation, or lab report
-   → Modern Dark Terminal (server/data-center context)
-
-6. Content is from a real remote server session (SSH)
-   → Modern Dark Terminal with window chrome
+6. User is writing an experiment report, technical documentation, or lab report
+   → Remote Linux SSH Server Session unless the prompt clearly indicates Windows/macOS local work
 
 7. Explicit user request overrides all heuristics
 ```
 
 ## Font Stack
 
-Always use: `'Consolas', 'Courier New', 'Microsoft YaHei', monospace`
+Use a platform-specific stack instead of one universal fallback:
 
-This covers:
-- Windows: Consolas (best terminal font on Windows)
-- macOS: Courier New (fallback, SF Mono not universally available as webfont)
-- Linux: Courier New or system monospace
-- CJK: Microsoft YaHei for Chinese characters in output
+- Windows Terminal / PowerShell: `'Cascadia Mono', 'Cascadia Code', 'Consolas', 'Microsoft YaHei UI', monospace`
+- macOS Terminal: `'SF Mono', 'Menlo', 'Monaco', 'PingFang SC', monospace`
+- Linux / SSH: `'JetBrains Mono', 'Ubuntu Mono', 'DejaVu Sans Mono', 'Consolas', 'Microsoft YaHei', monospace`
+- CRT presets: `'IBM Plex Mono', 'Consolas', 'Courier New', monospace`
+
+Use CJK fallback only after the terminal font so Chinese output renders while Latin command
+text keeps the right terminal proportions.

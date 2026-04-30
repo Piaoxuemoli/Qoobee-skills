@@ -5,3 +5,9 @@ __pycache__/
 # Lab-report outputs (user-generated, not skill code)
 lab-report/outputs/*
 !lab-report/outputs/.gitkeep
+
+.cursor/
+
+# Terminal screenshot outputs (user-generated, not skill code)
+terminal-screenshot/outputs/*
+!terminal-screenshot/outputs/.gitkeep

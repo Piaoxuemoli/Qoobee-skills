@@ -16,9 +16,11 @@ Automate the full lab-report pipeline: extract procedures from source materials 
 
 ### [terminal-screenshot](terminal-screenshot/) — [详细文档](docs/terminal-screenshot.md)
 
-将终端命令输出渲染为逼真的 PNG 截图。支持多种终端风格、CRT 效果，自动配置渲染工具。
+将终端命令输出渲染为逼真的 PNG 截图。支持 PowerShell、macOS zsh、Linux/SSH 等高保真模板，自动配置渲染工具，并按时间分区保存输出。
 
-Render terminal command outputs as realistic PNG screenshots. Multiple terminal styles, CRT effects, auto-configuring rendering tools.
+Render terminal command outputs as realistic PNG screenshots. High-fidelity templates for PowerShell, macOS zsh, Linux/SSH, auto-configuring rendering tools, and time-partitioned outputs.
+
+![terminal-screenshot 示例 / Example](terminal-screenshot/example.png)
 
 ---
 

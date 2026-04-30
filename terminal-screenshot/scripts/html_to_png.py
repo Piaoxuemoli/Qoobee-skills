@@ -7,7 +7,10 @@ retrying up to 3 times. Falls back to existing system tools if auto-config fails
 If nothing works, exits with code 2 so the caller can skip screenshots gracefully.
 
 Usage:
-    python html_to_png.py <input.html> [output.png] [--width W]
+    python html_to_png.py <input.html> [output.png] [--width W] [--output-root DIR] [--name NAME]
+
+When output.png is omitted, files are written to:
+    <skill-dir>/outputs/YYYY-MM-DD/HHMMSS-name/
 
 Exit codes:
     0 — screenshot generated successfully
@@ -21,6 +24,7 @@ import subprocess
 import shutil
 import tempfile
 import time
+import re
 
 
 MAX_RETRIES = 3
@@ -53,6 +57,216 @@ def estimate_height(line_count):
     content_px = line_count * 20
     chrome_px = 116
     return int(content_px + chrome_px)
+
+
+def estimate_width(html_path):
+    """Estimate viewport width from CSS window widths, including page padding."""
+    try:
+        with open(html_path, 'r', encoding='utf-8') as f:
+            text = f.read()
+
+        widths = [
+            int(value)
+            for value in re.findall(
+                r'\.(?:window|terminal|monitor)\s*\{[^}]*?width:\s*(\d+)px',
+                text,
+                flags=re.DOTALL
+            )
+        ]
+        if not widths:
+            widths = [int(value) for value in re.findall(r'width:\s*(\d+)px', text)]
+
+        content_width = max(widths) if widths else 740
+        # Most templates use 20-22px body padding on both sides plus a little clip margin.
+        return max(800, min(content_width + 96, 1600))
+    except Exception:
+        return 800
+
+
+def extract_visible_text(html_text):
+    """Extract approximate visible text for quality checks."""
+    text = re.sub(r'<style[^>]*>.*?</style>', '', html_text, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r'<script[^>]*>.*?</script>', '', text, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r'<br\s*/?>', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'</(?:div|p|span|pre|section)>', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'<[^>]+>', '', text)
+    text = (
+        text.replace('&lt;', '<')
+        .replace('&gt;', '>')
+        .replace('&amp;', '&')
+        .replace('&nbsp;', ' ')
+    )
+    lines = [line.rstrip() for line in text.splitlines()]
+    return '\n'.join(line for line in lines if line.strip())
+
+
+def validate_html_quality(html_path):
+    """Return non-fatal warnings for common terminal screenshot realism issues."""
+    try:
+        with open(html_path, 'r', encoding='utf-8') as f:
+            html = f.read()
+    except Exception as exc:
+        return [f"could not read HTML for quality checks: {exc}"]
+
+    warnings = []
+    visible = extract_visible_text(html)
+    visible_lines = [line for line in visible.splitlines() if line.strip()]
+    line_count = len(visible_lines)
+    has_titlebar = 'class="titlebar"' in html or "class='titlebar'" in html
+    has_startup_context = any(
+        marker in visible
+        for marker in [
+            "PowerShell 7 Ready",
+            "Type 'help-commands'",
+            "Last login:",
+            "Welcome to Ubuntu",
+            "Microsoft Windows",
+        ]
+    )
+    has_ssh_transition = bool(re.search(r'\bssh\s+\S+@\S+', visible))
+    looks_linux_prompt = bool(re.search(r'[\w.-]+@[\w.-]+:[~/\w./-]*[$#]', visible))
+    looks_powershell = "PS " in visible and ">" in visible
+    looks_macos_zsh = bool(re.search(r'\b\w+@[\w.-]+\s+\S+\s+%', visible))
+
+    if re.search(r'\.tabs\s*\{[^}]*align-items:\s*flex-end', html, re.DOTALL):
+        warnings.append(
+            "Windows Terminal tab strip uses align-items:flex-end; + and dropdown controls may sag."
+        )
+
+    has_tab_action = 'class="tab-action new-tab"' in html or "class='tab-action new-tab'" in html
+    if has_tab_action and re.search(r'\.tab-action\s*\{(?![^}]*height:\s*\d+px)', html, re.DOTALL):
+        warnings.append(
+            "Windows Terminal tab-action controls have no explicit height; vertical alignment may drift."
+        )
+
+    if not has_tab_action and re.search(r'\.(?:new-tab|chevron)\s*\{(?![^}]*height:\s*\d+px)', html, re.DOTALL):
+        warnings.append(
+            "Windows Terminal + or dropdown controls have no explicit height; vertical alignment may drift."
+        )
+
+    if re.search(r'class=["\'][^"\']*new-tab[^"\']*["\'][^>]*>\s*\+', html):
+        warnings.append(
+            "Windows Terminal new-tab control uses a text '+' glyph. Use CSS-drawn strokes for stable size and baseline."
+        )
+
+    if re.search(r'class=["\'][^"\']*chevron[^"\']*["\'][^>]*>\s*[⌄∨vV]', html):
+        warnings.append(
+            "Windows Terminal dropdown uses a text chevron glyph. Use a CSS-drawn chevron for stable size and baseline."
+        )
+
+    if re.search(r'class=["\'][^"\']*caption-btn[^"\']*["\'][^>]*>\s*[─□×-]', html):
+        warnings.append(
+            "Windows caption buttons use text glyphs. Use CSS-drawn minimize/maximize/close icons for stable size and alignment."
+        )
+
+    if has_titlebar and line_count <= 6 and not has_startup_context and not has_ssh_transition:
+        warnings.append(
+            "Short command evidence has a titlebar. Prefer a borderless snippet unless the user asked for a full terminal."
+        )
+
+    if has_titlebar and looks_linux_prompt and line_count <= 12 and not has_ssh_transition:
+        warnings.append(
+            "Short Linux/server output has fake window chrome. Prefer a clean SSH/Linux snippet unless showing a full SSH session."
+        )
+
+    if looks_powershell and re.search(r'(^|\n)\s*[$#]\s+\w+', visible):
+        warnings.append("PowerShell-looking content also contains Unix prompts; check prompt grammar.")
+
+    if looks_macos_zsh and "PS " in visible:
+        warnings.append("macOS zsh-looking content also contains PowerShell prompt text; check session profile.")
+
+    return warnings
+
+
+def slugify(value):
+    """Return a filesystem-safe lowercase slug."""
+    value = os.path.splitext(os.path.basename(value))[0] if value else "terminal"
+    value = re.sub(r'[^A-Za-z0-9._-]+', '-', value).strip('-._').lower()
+    return value or "terminal"
+
+
+def default_output_root(html_path):
+    """Use the skill's outputs directory next to scripts/ when possible."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    skill_dir = os.path.dirname(script_dir)
+    if os.path.basename(script_dir) == "scripts" and os.path.isdir(skill_dir):
+        return os.path.join(skill_dir, "outputs")
+    return os.path.join(os.path.dirname(os.path.abspath(html_path)), "outputs")
+
+
+def build_partitioned_output_paths(html_path, output_root=None, name=None):
+    """Create a dated output partition and return (html_copy, png_path, output_dir)."""
+    slug = slugify(name or html_path)
+    date_part = time.strftime("%Y-%m-%d")
+    time_part = time.strftime("%H%M%S")
+    root = output_root or default_output_root(html_path)
+    output_dir = os.path.join(root, date_part, f"{time_part}-{slug}")
+    os.makedirs(output_dir, exist_ok=True)
+
+    html_copy = os.path.join(output_dir, f"{slug}.html")
+    png_path = os.path.join(output_dir, f"{slug}.png")
+    shutil.copy2(html_path, html_copy)
+    return html_copy, png_path, output_dir
+
+
+def parse_args(argv):
+    """Parse positional args plus optional flags without requiring argparse."""
+    if len(argv) < 2:
+        print(__doc__)
+        sys.exit(1)
+
+    html_path = argv[1]
+    png_path = None
+    width = None
+    output_root = None
+    output_name = None
+
+    i = 2
+    while i < len(argv):
+        arg = argv[i]
+        if arg == "--width":
+            if i + 1 >= len(argv):
+                print("ERROR: --width requires a value", file=sys.stderr)
+                sys.exit(1)
+            try:
+                width = int(argv[i + 1])
+            except ValueError:
+                print(f"ERROR: invalid --width value: {argv[i + 1]}", file=sys.stderr)
+                sys.exit(1)
+            i += 2
+        elif arg.startswith("--width="):
+            try:
+                width = int(arg.split("=", 1)[1])
+            except ValueError:
+                print(f"ERROR: invalid --width value: {arg}", file=sys.stderr)
+                sys.exit(1)
+            i += 1
+        elif arg == "--output-root":
+            if i + 1 >= len(argv):
+                print("ERROR: --output-root requires a value", file=sys.stderr)
+                sys.exit(1)
+            output_root = argv[i + 1]
+            i += 2
+        elif arg.startswith("--output-root="):
+            output_root = arg.split("=", 1)[1]
+            i += 1
+        elif arg == "--name":
+            if i + 1 >= len(argv):
+                print("ERROR: --name requires a value", file=sys.stderr)
+                sys.exit(1)
+            output_name = argv[i + 1]
+            i += 2
+        elif arg.startswith("--name="):
+            output_name = arg.split("=", 1)[1]
+            i += 1
+        elif png_path is None:
+            png_path = arg
+            i += 1
+        else:
+            print(f"ERROR: unexpected argument: {arg}", file=sys.stderr)
+            sys.exit(1)
+
+    return html_path, png_path, width, output_root, output_name
 
 
 # ---------------------------------------------------------------------------
@@ -336,17 +550,35 @@ def render_playwright_npx(html_path, png_path, width):
 # ---------------------------------------------------------------------------
 
 def main():
-    if len(sys.argv) < 2:
-        print(__doc__)
-        sys.exit(1)
-
-    html_path = sys.argv[1]
-    png_path = sys.argv[2] if len(sys.argv) > 2 else os.path.splitext(html_path)[0] + ".png"
-    width = 800
+    html_path, png_path, width_override, output_root, output_name = parse_args(sys.argv)
 
     if not os.path.exists(html_path):
         print(f"ERROR: HTML file not found: {html_path}", file=sys.stderr)
         sys.exit(1)
+
+    if png_path is None:
+        html_path, png_path, output_dir = build_partitioned_output_paths(
+            html_path,
+            output_root=output_root,
+            name=output_name,
+        )
+        print(f"[output] Directory: {output_dir}")
+        print(f"[output] HTML: {html_path}")
+        print(f"[output] PNG: {png_path}")
+    else:
+        output_parent = os.path.dirname(os.path.abspath(png_path))
+        if output_parent:
+            os.makedirs(output_parent, exist_ok=True)
+
+    width = width_override or estimate_width(html_path)
+    print(f"[render] Viewport width: {width}px")
+
+    quality_warnings = validate_html_quality(html_path)
+    if quality_warnings:
+        for warning in quality_warnings:
+            print(f"[quality-check] WARNING: {warning}", file=sys.stderr)
+    else:
+        print("[quality-check] OK")
 
     # ---- Phase 1: Auto-configure Playwright (best quality) ----
     print("[auto-config] Attempting to install Playwright (best quality tool)...")
