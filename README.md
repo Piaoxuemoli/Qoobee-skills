@@ -70,7 +70,7 @@ Render terminal command outputs as realistic PNG screenshots. High-fidelity temp
 
 ![terminal-screenshot 示例 / Example](terminal-screenshot/example.png)
 
-### study-index
+### study-index — [详细文档](docs/study-index.md)
 
 将散乱的课程材料（PPT、PDF、文档、笔记）整理成一本带目录、带索引、带例题、带关键图片的速查手册。核心原则：不丢失信息——源材料中的关键图片、公式、图表必须提取并放到手册对应位置。输出 Markdown + PDF（可打印）。
 
