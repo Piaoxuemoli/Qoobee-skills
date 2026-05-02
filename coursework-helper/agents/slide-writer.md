@@ -13,10 +13,47 @@ and assignment requirements.
   4:3 unless the teacher explicitly requires it.
 - 8-12 slides by default unless the user/teacher specifies otherwise.
 - One idea per slide.
-- 3-5 short bullets per content slide.
+- 4-5 bullets per content slide (minimum 4 for any content slide).
 - Put explanations in speaker notes, not dense slide text.
 - Use a title that sounds like a course presentation, not a marketing deck.
 - If visual suggestions are needed, describe them in notes rather than fabricating images.
+
+## Content Density Rules
+
+**Every slide must look full, not empty.** Follow these rules to avoid sparse, whitespace-heavy slides:
+
+### Bullet text density
+- Each bullet must be **15-25 Chinese characters** (or 20-40 English words). Never use short
+  keyword-style phrases like "情绪比炫技更重要" — expand to "情绪比炫技更重要——没有复杂特效，
+  但抓住了自卑、挣扎、坚持、希望这些真实情绪"
+- Every bullet must contain **a concrete detail, example, or explanation**, not just an abstract label
+- Bad: "洞察普通人心理"
+- Good: "洞察普通人心理——我们常常觉得自己不够好、不够专业、不够有天赋，所以不敢开始"
+
+### Slide organization density
+- Content slides with 3 or fewer points: use `two-column` or `icon-grid` layout, NOT `bullet-list`
+- Content slides with 4-6 points: use `bullet-list` (icon-card layout kicks in for ≤3)
+- Comparison content: always use `before-after` or `pros-cons`, never `bullet-list`
+- Overview/summary of multiple topics: use `icon-grid` with title+description per card
+
+### Speaker notes density
+- Every slide must have speaker notes: **at least 4-5 sentences**, each 15-30 characters
+- Speaker notes should be enough to support 20-30 seconds of speaking per slide
+- Include transitions between slides in the notes
+
+### Key message density
+- `Key message:` must be a **complete sentence** (15+ characters), not a keyword list
+- Bad: "反传统 + 重新定义伟大"
+- Good: "这支广告最重要的创意是反传统——不拍冠军拍普通人，并重新定义了'伟大'的含义"
+
+## Video Link Rules
+
+When the user asks to include video links:
+- **Default to Chinese platforms**: Bilibili > Youku > Tencent Video
+- Only use YouTube if the user explicitly specifies it or the content is only available there
+- Format: `视频：https://www.bilibili.com/video/BV...` or search link
+- If no specific video URL is known, provide a search link: `搜索：https://search.bilibili.com/all?keyword=...`
+- Always include a fallback note: "如无法播放可提前下载到本地"
 
 ## Structure
 
@@ -87,13 +124,16 @@ and automatically maps them to styled PPTX templates:
 |------|--------------|-----------------|
 | `cover` | `title-hero`, `title-with-subtitle` | `cover` — accent stripe, course/student metadata |
 | `hook` | `question`, `contrast`, `problem-card` | `question` — large question mark accent |
-| `concept` | `diagram`, `two-column`, `process-flow` | `diagram` / `two_column` / `process_flow` |
+| `concept` | `diagram`, `two-column`, `process-flow`, `icon-grid` | `diagram` / `two_column` / `process_flow` / `icon_grid` |
 | `case` | `before-after`, `example-card`, `quote-plus-analysis` | `before_after` / `bullet_list` / `quote` |
 | `transition` | `section-divider`, `big-number` | `section_divider` / `stat_hero` |
 | `takeaway` | `three-takeaways`, `closing-statement` | `three_takeaways` / `closing` |
 
 The engine also supports these additional templates for data-heavy slides:
-`pros_cons`, `table`, `phases`, `stat_hero`.
+`pros_cons`, `table`, `phases`, `stat_hero`, `icon_grid`.
+
+Use `icon-grid` when you have 3-6 brief points that each need a title and short description —
+it creates numbered cards with icon circles, which looks much denser than a plain bullet list.
 
 ## Evidence
 
