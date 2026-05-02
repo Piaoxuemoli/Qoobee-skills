@@ -1,24 +1,28 @@
-# Qoobee Skills
+# Auto-college
 
-Claude Code 技能集合 — 自动化实验报告、课程作业、终端截图等常用工作流。
+一套 Claude Code / Cursor Skills，让 AI 帮你搞定大学课程作业——实验报告、水课 PPT、小论文、读书报告、课堂展示稿、终端截图，从材料到成品一步到位。
 
-A collection of Claude Code skills — automating lab reports, coursework deliverables, terminal screenshots, and other common workflows.
+A collection of Claude Code / Cursor Skills that automate college coursework — lab reports, lecture slides, short papers, reading reports, presentation scripts, and terminal screenshots — from raw materials to polished deliverables in one step.
 
 ---
 
 ## 快速配置 / Quick Start
 
-打开 Cursor / Claude Code，把下面这句话发给 Agent：
+把本仓库的 skill 目录复制或 clone 到你的 Agent skills 路径：
 
-```text
-下载 https://github.com/Piaoxuemoli/Qoobee-skills，并把里面的 skills 配置到我的 Agent 环境里
+| 环境 | Skills 路径 |
+|------|------------|
+| Claude Code | `.claude/commands/` （项目级）或 `~/.claude/commands/` （全局） |
+| Cursor | `.cursor/skills/` （项目级）或 `~/.cursor/skills/` （全局） |
+| 其他 | 参考对应平台的 custom instructions / skills 文档 |
+
+```bash
+# 示例：clone 到项目的 .claude/commands/
+git clone https://github.com/Piaoxuemoli/Auto-college.git /tmp/auto-college
+cp -r /tmp/auto-college/coursework-helper /tmp/auto-college/lab-report /tmp/auto-college/terminal-screenshot .claude/commands/
 ```
 
-Agent 会下载仓库、识别 skill 目录，并按当前环境完成配置。
-
-### 使用方式 / Usage
-
-配置完成后，在 Agent 对话里直接描述任务即可：
+配置完成后，直接在对话中描述任务即可：
 
 ```text
 帮我根据实验手册生成实验报告
@@ -32,7 +36,7 @@ Agent 会下载仓库、识别 skill 目录，并按当前环境完成配置。
 把这段 PowerShell 输出渲染成终端截图
 ```
 
-Agent 会根据 skill 描述自动选择 `lab-report`、`coursework-helper` 或 `terminal-screenshot`。如果没有自动触发，可以明确点名：
+Agent 会自动匹配对应 skill。也可以明确指定：
 
 ```text
 使用 terminal-screenshot skill，把这段终端输出做成 PNG
@@ -42,58 +46,27 @@ Agent 会根据 skill 描述自动选择 `lab-report`、`coursework-helper` 或 
 
 ## Skills
 
-### [lab-report](lab-report/) — [详细文档](docs/lab-report.md)
+### lab-report
 
-实验报告全流程自动化：首次配置个人信息，本地复用；支持材料目录一键导入、自动模式、课程模板记忆、证据映射、Anthropic 官方文件处理 skills 检查，以及可执行实验、已有数据、纯写作三类报告路径。内置模板采用标准大学实验报告格式（10 节结构），导出 DOCX 时自动应用学术排版规范。
+实验报告全流程自动化：个人信息本地复用、材料目录一键导入、自动模式、课程模板记忆、证据映射。内置标准大学实验报告模板（10 节结构），导出 DOCX 自动应用学术排版。
 
-Automate lab reports with reusable local profile data, material-folder intake, optional auto mode, course template memory, evidence maps, official document-skill checks, and three paths: executable experiments, provided-data reports, and paper-only writeups. Built-in templates follow standard university format (10-section), with academic styling auto-applied on DOCX export.
+Automate lab reports with reusable profile data, material-folder intake, auto mode, course template memory, and evidence maps. Standard university format (10-section) with academic styling on DOCX export.
 
-### [coursework-helper](coursework-helper/) — [详细文档](docs/coursework-helper.md)
+### coursework-helper
 
-面向大学通识课、选修课和低风险课程作业：快速生成 PPT、小论文、读书报告、观后感、课堂展示稿和演讲稿。内置 PPT 引擎（15 个模板、中文主题系统、slide card 解析器、装饰原语），支持 Markdown slide card 直接导出为带样式和 speaker notes 的 PPTX。可选 Slidev 输出路径：浏览器实时预览、渐进动画、代码高亮、Mermaid 图表。视频链接默认使用 Bilibili 等国内平台。支持材料目录索引、证据备注、Markdown/DOCX/PDF/PPTX 交付。
+通识课 / 选修课作业一键生成：PPT（15 个模板 + 主题系统 + Slidev 可选）、小论文、读书报告、观后感、演讲稿。内置 PPT 引擎，Markdown slide card 直接导出带 speaker notes 的 PPTX。视频链接默认 Bilibili 等国内平台。
 
-Create practical deliverables for general education and low-stakes coursework: slides, short papers, reading reports, reflection essays, classroom presentations, and speech scripts. Built-in PPT engine with 15 templates, Chinese theme system, slide card parser, and decoration primitives — exports styled PPTX with speaker notes directly from structured Markdown. Optional Slidev output path for browser preview, progressive animations, code highlighting, and Mermaid diagrams. Video links default to Bilibili and other Chinese platforms. Supports material indexing, evidence notes, and Markdown/DOCX/PDF/PPTX delivery.
+Generate deliverables for general education coursework: slides (15 templates + theme system + optional Slidev), short papers, reading reports, reflection essays, and speech scripts. Built-in PPT engine exports styled PPTX with speaker notes from structured Markdown.
 
-### [terminal-screenshot](terminal-screenshot/) — [详细文档](docs/terminal-screenshot.md)
+### terminal-screenshot
 
-将终端命令输出渲染为逼真的 PNG 截图。支持 PowerShell、macOS zsh、Linux/SSH 等高保真模板，自动配置渲染工具，并按时间分区保存输出。
+终端命令输出渲染为逼真 PNG 截图。支持 PowerShell、macOS zsh、Linux/SSH 高保真模板。
 
-Render terminal command outputs as realistic PNG screenshots. High-fidelity templates for PowerShell, macOS zsh, Linux/SSH, auto-configuring rendering tools, and time-partitioned outputs.
+Render terminal command outputs as realistic PNG screenshots. High-fidelity templates for PowerShell, macOS zsh, and Linux/SSH.
 
 ![terminal-screenshot 示例 / Example](terminal-screenshot/example.png)
 
 ---
 
-## 结构 / Structure
-
-```
-Qoobee-skills/
-├── README.md
-├── .claude/rules/          # 工作流规范（branching, references, readme）
-├── docs/                   # 详细文档（与 skill 代码分离）
-│   ├── coursework-helper.md
-│   ├── lab-report.md
-│   └── terminal-screenshot.md
-├── coursework-helper/      # 通识课/水课作业 skill 代码
-│   ├── SKILL.md
-│   ├── engine/             # PPT 引擎（theme, builder, 15 templates, parser, slidev_export）
-│   ├── agents/             # 子 agent 定义
-│   ├── scripts/            # 工具脚本
-│   └── ...
-├── lab-report/             # 实验报告 skill 代码
-│   ├── SKILL.md
-│   └── ...
-├── terminal-screenshot/    # 终端截图 skill 代码
-│   ├── SKILL.md
-│   └── ...
-└── references/             # 外部参考代码（git-ignored）
-    ├── mckinsey-pptx/
-    ├── office-ppt-mcp/
-    ├── supercurses-powerpoint/
-    ├── okppt/
-    └── slidev/
-```
-
-每个 skill 的 SKILL.md 是 Claude Code 自动加载的技能指令文件，详细文档在 `docs/` 目录中。
-
-Each skill's SKILL.md is the instruction file loaded by Claude Code. Detailed docs live in `docs/`, separated from skill code.
+![GitHub stars](https://img.shields.io/github/stars/Piaoxuemoli/Auto-college?style=social)
+![GitHub Created At](https://img.shields.io/github/created-at/Piaoxuemoli/Auto-college)
