@@ -162,6 +162,73 @@ def add_line(slide, x1_in, y1_in, x2_in, y2_in, *,
     return line
 
 
+# ---------- decoration primitives ----------
+
+def add_icon_circle(slide, cx_in, cy_in, diameter_in, text, *,
+                    fill=None, text_color=None, font_size=14,
+                    theme: Theme = DEFAULT_THEME):
+    """A filled circle with centered text (number, symbol, or emoji).
+
+    Returns the oval shape. Text is centered both horizontally and vertically.
+    """
+    pal = theme.palette
+    r = diameter_in / 2
+    oval = add_oval(slide, cx_in - r, cy_in - r, diameter_in, diameter_in,
+                    fill=fill or pal.primary, line=None)
+    tf = oval.text_frame
+    tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+    p = tf.paragraphs[0]
+    p.alignment = PP_ALIGN.CENTER
+    run = p.add_run()
+    set_run(run, text, size=font_size, bold=True,
+            color=text_color or pal.white, family=theme.typography.family)
+    return oval
+
+
+def add_accent_bar(slide, left_in, top_in, width_in, height_in, *,
+                   color=None, theme: Theme = DEFAULT_THEME):
+    """A thin decorative color bar (stripe, divider, or card top accent).
+
+    Returns the rectangle shape.
+    """
+    return add_rect(slide, left_in, top_in, width_in, height_in,
+                    fill=color or theme.palette.primary)
+
+
+def add_label_badge(slide, left_in, top_in, text, *,
+                    fill=None, text_color=None, font_size=10,
+                    padding_x=0.15, theme: Theme = DEFAULT_THEME):
+    """A rounded-rectangle badge with text inside.
+
+    Width is auto-calculated from text length. Returns the shape.
+    """
+    pal = theme.palette
+    # Approximate width: 0.12" per character + padding
+    char_w = 0.13 if any(ord(c) > 127 for c in text) else 0.075
+    w = len(text) * char_w + padding_x * 2
+    h = 0.3
+    s = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
+                               Inches(left_in), Inches(top_in),
+                               Inches(w), Inches(h))
+    s.shadow.inherit = False
+    s.fill.solid()
+    s.fill.fore_color.rgb = fill or pal.primary
+    s.line.fill.background()
+    tf = s.text_frame
+    tf.word_wrap = False
+    tf.margin_left = Emu(0)
+    tf.margin_right = Emu(0)
+    tf.margin_top = Emu(0)
+    tf.margin_bottom = Emu(0)
+    tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+    p = tf.paragraphs[0]
+    p.alignment = PP_ALIGN.CENTER
+    run = p.add_run()
+    set_run(run, text, size=font_size, bold=True,
+            color=text_color or pal.white, family=theme.typography.family)
+    return s
+
+
 # ---------- slide chrome ----------
 
 def add_title(slide, text, theme: Theme = DEFAULT_THEME, *,
