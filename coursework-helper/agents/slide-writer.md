@@ -132,6 +132,11 @@ and automatically maps them to styled PPTX templates:
 The engine also supports these additional templates for data-heavy slides:
 `pros_cons`, `table`, `phases`, `stat_hero`, `icon_grid`.
 
+**Slidev compatibility:** The slide card format is fully compatible with Slidev export.
+When the user requests Slidev output (browser preview, animations, code highlighting),
+no changes to the slide card writing process are needed. The delivery packager handles
+the Slidev conversion automatically. See `engine/slidev_export.py` for layout mapping.
+
 Use `icon-grid` when you have 3-6 brief points that each need a title and short description —
 it creates numbered cards with icon circles, which looks much denser than a plain bullet list.
 

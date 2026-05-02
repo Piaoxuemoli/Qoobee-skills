@@ -214,6 +214,9 @@ Good coursework output should be:
 
 - **PPT Engine** (`coursework-helper/engine/`): Local python-pptx engine for PPTX generation.
   15 templates, theme system, slide card parser. Primary PPTX export path.
+- **Slidev Export** (`coursework-helper/engine/slidev_export.py`): Optional Slidev project
+  generator. Converts slide specs to Slidev-compatible Markdown with animations, progressive
+  disclosure, and browser preview. Requires Node.js + npm for `slidev export`.
 - Official `pptx`, `docx`, `pdf`, and `xlsx` skills for reading files and fallback export.
 - Python + `python-pptx` package for PPTX generation.
 - `lab-report/scripts/check_official_skills.py` can be reused for official skill checks.
