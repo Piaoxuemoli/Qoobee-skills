@@ -143,6 +143,28 @@ def _slide_to_spec(block: str, slide_title: str) -> Dict[str, Any]:
         spec["type"] = "diagram"
         spec["title"] = slide_title
         spec["items"] = bullets if bullets else [key_message or ""]
+    elif layout == "icon-grid":
+        spec["type"] = "icon_grid"
+        spec["title"] = slide_title
+        # Parse bullets with **bold title**：description format
+        items = []
+        for b in bullets:
+            if "**" in b and "：" in b:
+                # Extract bold title and description
+                import re
+                m = re.match(r"\*\*(.+?)\*\*[：:]\s*(.*)", b)
+                if m:
+                    items.append({"title": m.group(1), "desc": m.group(2)})
+                else:
+                    items.append({"title": b, "desc": ""})
+            elif "**" in b:
+                # Bold title without description
+                import re
+                title = re.sub(r"\*\*(.+?)\*\*", r"\1", b)
+                items.append({"title": title, "desc": ""})
+            else:
+                items.append({"title": b, "desc": ""})
+        spec["items"] = items if items else [{"title": key_message or slide_title, "desc": ""}]
     else:
         # Default: bullet list
         spec["type"] = "bullet_list"
