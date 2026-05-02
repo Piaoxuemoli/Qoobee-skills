@@ -12,15 +12,16 @@ description: >
 
 # Study Index Skill
 
-将散乱的课程材料（PPT、PDF、文档、笔记）整理成一本带目录、带索引、带例题、带关键图片的速查手册。核心原则：**不丢失信息**，源材料中的关键图片、公式、图表必须提取并放到手册对应位置。
+将散乱的课程材料（PPT、PDF、文档、笔记）整理成一本带目录、带索引、带例题、带关键图片的速查手册。核心原则：**不丢失信息**——源材料中的所有文字内容必须完整保留（不总结、不删减），关键图片、公式、图表必须提取并放到手册对应位置。
 
 ## Architecture
 
 ```text
 User provides course materials
   -> Extract: pull text + images from each source file
-  -> Organize: group by topic/chapter, identify key images
-  -> Write: structured handbook with TOC, knowledge points, examples, images
+  -> Filter: remove decorative images (logos, backgrounds, tiny icons)
+  -> Organize: group by topic/chapter, identify key images, list all source files
+  -> Compile: arrange ALL source content into structured handbook (no summarizing)
   -> Export: Markdown + PDF (printable)
 ```
 
@@ -60,7 +61,7 @@ study-index/outputs/<course-name>/
 ├── 00_admin/
 │   ├── study_context.json
 │   └── extract_manifest.json
-├── 01_extracted/          # text + images by source
+├── 01_extracted/          # text + images by source (all images)
 │   ├── <source-1>/
 │   │   ├── slide_01.txt
 │   │   ├── slide_01_img_01.png
@@ -68,6 +69,9 @@ study-index/outputs/<course-name>/
 │   └── <source-2>/
 │       ├── page_01.txt
 │       └── ...
+├── 01_filtered/           # filtered images (decorative removed)
+│   └── <source-1>/
+│       └── slide_01_img_01.png
 ├── 02_outline/
 │   └── outline.md
 ├── 03_drafts/
@@ -115,23 +119,38 @@ python study-index/scripts/extract_content.py \
 
 This extracts text and images from all source files into per-source directories.
 
+### Step 1.5: Filter Images
+
+Run the image filter to remove decorative images (logos, backgrounds, tiny icons):
+
+```bash
+python study-index/scripts/filter_images.py \
+  --input-dir "<output_dir>/01_extracted/" \
+  --output-dir "<output_dir>/01_filtered/" \
+  --report "<output_dir>/00_admin/filter_report.json"
+```
+
+This reduces the image count (e.g., 1400 -> ~800) so the organizer can focus
+on educational images.
+
 ### Step 2: Organize Knowledge
 
 Read `agents/knowledge-organizer.md`.
 
 - Read all extracted text from `01_extracted/`
-- Browse extracted images to identify key ones (formulas, diagrams, charts, important screenshots)
+- Browse filtered images from `01_filtered/` to identify key ones
 - Group content by chapter/topic
 - Write `02_outline/outline.md` with structured knowledge map
+- **Every source file must be listed** in the outline with its path and character count
 
 ### Step 3: Write Handbook
 
 Read `agents/handbook-writer.md`.
 
-- Write `03_drafts/draft_handbook.md` first
-- Polish into `04_final/final_handbook.md`
-- Images referenced with relative paths: `![desc](../01_extracted/source/slide_01_img_01.png)`
-- Run QA checks on image references and content completeness
+- **Compile** (not summarize) all source content into `03_drafts/draft_handbook.md`
+- Copy to `04_final/final_handbook.md`
+- Images referenced with relative paths: `![desc](../01_filtered/source/slide_01_img_01.png)`
+- Run QA checks: every source file must appear, all image paths must be valid
 
 ### Step 4: Export
 
@@ -140,14 +159,14 @@ Convert Markdown to PDF:
 ```bash
 # Try pandoc first
 pandoc 04_final/final_handbook.md -o 05_exports/final_handbook.pdf \
-  --resource-path="<output_dir>/04_final:<output_dir>/01_extracted"
+  --resource-path="<output_dir>/04_final:<output_dir>/01_filtered"
 
 # Fallback: Python weasyprint
 python -c "
 from study_index_export import md_to_pdf
 md_to_pdf('<output_dir>/04_final/final_handbook.md',
           '<output_dir>/05_exports/final_handbook.pdf',
-          resource_dirs=['<output_dir>/01_extracted'])
+          resource_dirs=['<output_dir>/01_filtered'])
 "
 ```
 
@@ -155,6 +174,7 @@ md_to_pdf('<output_dir>/04_final/final_handbook.md',
 
 A good study handbook should:
 
+- **Contain ALL text content** from source materials — not a summary, but a compilation
 - Cover all topics from source materials without gaps
 - Include every key image, formula, and diagram from the sources
 - Have a clear table of contents for quick navigation
@@ -162,6 +182,7 @@ A good study handbook should:
 - Be printable as a single PDF with images inline
 - Use consistent formatting throughout
 - Have a keyword index for quick lookup during exams
+- **Test**: A student reading only the handbook should have ≥ the information in the originals
 
 ## Safety and Honesty
 
