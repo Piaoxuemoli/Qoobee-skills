@@ -125,6 +125,7 @@ class PresentationBuilder:
     def add_spec(self, spec: Dict[str, Any]):
         spec = dict(spec)
         slide_type = spec.pop("type", None) or infer_slide_type(spec)
+        speaker_notes = spec.pop("_speaker_notes", None)
 
         # Map layout alias if present
         layout = spec.pop("layout", None)
@@ -133,7 +134,16 @@ class PresentationBuilder:
             if mapped and mapped != "bullet_list":
                 slide_type = mapped
 
-        return self.add(slide_type, **spec)
+        slide = self.add(slide_type, **spec)
+
+        # Apply speaker notes after slide creation
+        if speaker_notes:
+            from pptx.oxml.ns import qn
+            notes_slide = slide.notes_slide
+            tf = notes_slide.notes_text_frame
+            tf.text = speaker_notes
+
+        return slide
 
     def add_specs(self, specs: Iterable[Dict[str, Any]]):
         return [self.add_spec(s) for s in specs]
