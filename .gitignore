@@ -16,5 +16,9 @@ coursework-helper/outputs/*
 terminal-screenshot/outputs/*
 !terminal-screenshot/outputs/.gitkeep
 
+# Study-index outputs (user-generated, not skill code)
+study-index/outputs/*
+!study-index/outputs/.gitkeep
+
 # External reference code (third-party repos cloned for inspiration/reuse)
 references/
