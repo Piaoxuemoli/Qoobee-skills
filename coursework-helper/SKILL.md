@@ -205,6 +205,8 @@ Good coursework output should be:
 
 ## Dependencies
 
-- Official `pptx`, `docx`, `pdf`, and `xlsx` skills for reading and exporting files.
-- Python for workspace and source indexing scripts.
+- **PPT Engine** (`coursework-helper/engine/`): Local python-pptx engine for PPTX generation.
+  15 templates, theme system, slide card parser. Primary PPTX export path.
+- Official `pptx`, `docx`, `pdf`, and `xlsx` skills for reading files and fallback export.
+- Python + `python-pptx` package for PPTX generation.
 - `lab-report/scripts/check_official_skills.py` can be reused for official skill checks.

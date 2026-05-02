@@ -80,16 +80,20 @@ Write intermediate work to `03_drafts/draft_slides.md` when useful, then write t
 Markdown to `04_final/final_slides.md`. Use `assignment_context.json.output_paths.final_slides`
 when available.
 
-Use varied layouts across the deck:
+Use varied layouts across the deck. The PPT engine supports these layout names
+and automatically maps them to styled PPTX templates:
 
-| Role | Good layouts |
-|------|--------------|
-| `cover` | `title-hero`, `title-with-subtitle` |
-| `hook` | `question`, `contrast`, `problem-card` |
-| `concept` | `diagram`, `two-column`, `process-flow` |
-| `case` | `before-after`, `example-card`, `quote-plus-analysis` |
-| `transition` | `section-divider`, `big-number` |
-| `takeaway` | `three-takeaways`, `closing-statement` |
+| Role | Good layouts | Engine template |
+|------|--------------|-----------------|
+| `cover` | `title-hero`, `title-with-subtitle` | `cover` — accent stripe, course/student metadata |
+| `hook` | `question`, `contrast`, `problem-card` | `question` — large question mark accent |
+| `concept` | `diagram`, `two-column`, `process-flow` | `diagram` / `two_column` / `process_flow` |
+| `case` | `before-after`, `example-card`, `quote-plus-analysis` | `before_after` / `bullet_list` / `quote` |
+| `transition` | `section-divider`, `big-number` | `section_divider` / `stat_hero` |
+| `takeaway` | `three-takeaways`, `closing-statement` | `three_takeaways` / `closing` |
+
+The engine also supports these additional templates for data-heavy slides:
+`pros_cons`, `table`, `phases`, `stat_hero`.
 
 ## Evidence
 

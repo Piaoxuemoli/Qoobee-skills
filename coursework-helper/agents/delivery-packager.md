@@ -27,9 +27,28 @@ Review generated files:
 
 ### Step 2: Export Formats
 
-Use official skills when requested:
+**PPTX export (preferred):** Use the local PPT engine when available:
 
-- `pptx` for `05_exports/final_slides.pptx`
+```python
+import sys
+sys.path.insert(0, "coursework-helper")
+from engine import PresentationBuilder
+from engine.slide_card_parser import parse_slides_md
+
+specs = parse_slides_md("<output_dir>/04_final/final_slides.md")
+b = PresentationBuilder()
+b.add_specs(specs)
+b.save("<output_dir>/05_exports/final_slides.pptx")
+```
+
+The engine automatically maps slide card layouts (title-hero, question, two-column,
+process-flow, three-takeaways, etc.) to PPTX templates with proper styling, speaker
+notes, and 16:9 widescreen format.
+
+If the engine is not available, fall back to official `pptx` skill.
+
+**Other formats:** Use official skills when requested:
+
 - `docx` for `05_exports/final_paper.docx` or script documents
 - `pdf` for PDF export
 

@@ -50,9 +50,9 @@ Automate lab reports with reusable local profile data, material-folder intake, o
 
 ### [coursework-helper](coursework-helper/) — [详细文档](docs/coursework-helper.md)
 
-面向大学通识课、选修课和低风险课程作业：快速生成 PPT、小论文、读书报告、观后感、课堂展示稿和演讲稿。支持材料目录索引、证据备注、Markdown/DOCX/PDF/PPTX 交付。
+面向大学通识课、选修课和低风险课程作业：快速生成 PPT、小论文、读书报告、观后感、课堂展示稿和演讲稿。内置 PPT 引擎（15 个模板、中文主题系统、slide card 解析器），支持 Markdown slide card 直接导出为带样式和 speaker notes 的 PPTX。支持材料目录索引、证据备注、Markdown/DOCX/PDF/PPTX 交付。
 
-Create practical deliverables for general education and low-stakes coursework: slides, short papers, reading reports, reflection essays, classroom presentations, and speech scripts.
+Create practical deliverables for general education and low-stakes coursework: slides, short papers, reading reports, reflection essays, classroom presentations, and speech scripts. Built-in PPT engine with 15 templates, Chinese theme system, and slide card parser — exports styled PPTX with speaker notes directly from structured Markdown.
 
 ### [terminal-screenshot](terminal-screenshot/) — [详细文档](docs/terminal-screenshot.md)
 
@@ -69,19 +69,28 @@ Render terminal command outputs as realistic PNG screenshots. High-fidelity temp
 ```
 Qoobee-skills/
 ├── README.md
+├── .claude/rules/          # 工作流规范（branching, references, readme）
 ├── docs/                   # 详细文档（与 skill 代码分离）
 │   ├── coursework-helper.md
 │   ├── lab-report.md
 │   └── terminal-screenshot.md
 ├── coursework-helper/      # 通识课/水课作业 skill 代码
 │   ├── SKILL.md
+│   ├── engine/             # PPT 引擎（theme, builder, 15 templates, parser）
+│   ├── agents/             # 子 agent 定义
+│   ├── scripts/            # 工具脚本
 │   └── ...
 ├── lab-report/             # 实验报告 skill 代码
 │   ├── SKILL.md
 │   └── ...
-└── terminal-screenshot/    # 终端截图 skill 代码
-    ├── SKILL.md
-    └── ...
+├── terminal-screenshot/    # 终端截图 skill 代码
+│   ├── SKILL.md
+│   └── ...
+└── references/             # 外部参考代码（git-ignored）
+    ├── mckinsey-pptx/
+    ├── office-ppt-mcp/
+    ├── supercurses-powerpoint/
+    └── okppt/
 ```
 
 每个 skill 的 SKILL.md 是 Claude Code 自动加载的技能指令文件，详细文档在 `docs/` 目录中。
