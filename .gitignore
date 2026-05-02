@@ -15,3 +15,6 @@ coursework-helper/outputs/*
 # Terminal screenshot outputs (user-generated, not skill code)
 terminal-screenshot/outputs/*
 !terminal-screenshot/outputs/.gitkeep
+
+# External reference code (third-party repos cloned for inspiration/reuse)
+references/

@@ -203,8 +203,20 @@ Good coursework output should be:
 - Avoid exam cheating, live quiz answers, or bypassing proctoring.
 - For ordinary coursework, prioritize useful drafts and disclose gaps in `delivery_manifest.json`.
 
+## Video and Media Links
+
+- **Default to Chinese platforms**: Bilibili > Youku > Tencent Video.
+- Only use YouTube if the user explicitly specifies it or the content is exclusively there.
+- When a specific video URL is not known, provide a search link on the chosen platform.
+- Include a fallback note in speaker notes: "如无法播放可提前下载到本地".
+
 ## Dependencies
 
-- Official `pptx`, `docx`, `pdf`, and `xlsx` skills for reading and exporting files.
-- Python for workspace and source indexing scripts.
+- **PPT Engine** (`coursework-helper/engine/`): Local python-pptx engine for PPTX generation.
+  15 templates, theme system, slide card parser. Primary PPTX export path.
+- **Slidev Export** (`coursework-helper/engine/slidev_export.py`): Optional Slidev project
+  generator. Converts slide specs to Slidev-compatible Markdown with animations, progressive
+  disclosure, and browser preview. Requires Node.js + npm for `slidev export`.
+- Official `pptx`, `docx`, `pdf`, and `xlsx` skills for reading files and fallback export.
+- Python + `python-pptx` package for PPTX generation.
 - `lab-report/scripts/check_official_skills.py` can be reused for official skill checks.

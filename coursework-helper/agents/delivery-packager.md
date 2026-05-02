@@ -27,9 +27,57 @@ Review generated files:
 
 ### Step 2: Export Formats
 
-Use official skills when requested:
+**PPTX export (preferred):** Use the local PPT engine when available:
 
-- `pptx` for `05_exports/final_slides.pptx`
+```python
+import sys
+sys.path.insert(0, "coursework-helper")
+from engine import PresentationBuilder
+from engine.slide_card_parser import parse_slides_md
+
+specs = parse_slides_md("<output_dir>/04_final/final_slides.md")
+b = PresentationBuilder()
+b.add_specs(specs)
+b.save("<output_dir>/05_exports/final_slides.pptx")
+```
+
+The engine automatically maps slide card layouts (title-hero, question, two-column,
+process-flow, three-takeaways, etc.) to PPTX templates with proper styling, speaker
+notes, and 16:9 widescreen format.
+
+If the engine is not available, fall back to official `pptx` skill.
+
+**Slidev export (optional):** When the user requests Slidev output or wants
+browser-based preview with animations:
+
+```python
+import sys
+sys.path.insert(0, "coursework-helper")
+from engine.slidev_export import export_slidev_from_md
+
+export_slidev_from_md(
+    "<output_dir>/04_final/final_slides.md",
+    "<output_dir>/05_exports/slidev-project/",
+    title="Presentation Title"
+)
+```
+
+This generates a Slidev project with `slides.md` and `package.json`. To use:
+
+```bash
+cd <output_dir>/05_exports/slidev-project/
+npm install
+npm run dev          # Browser preview with animations
+npm run export       # PDF export
+npm run export -- --format pptx  # PPTX export
+```
+
+Slidev supports progressive disclosure (`<v-clicks>`), code highlighting, Mermaid
+diagrams, and CSS transitions. Requires Node.js. If Node.js is not available, record
+this in `delivery_manifest.json` and keep the python-pptx output as primary.
+
+**Other formats:** Use official skills when requested:
+
 - `docx` for `05_exports/final_paper.docx` or script documents
 - `pdf` for PDF export
 
