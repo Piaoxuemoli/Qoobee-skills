@@ -13,9 +13,10 @@ Usage:
 """
 from __future__ import annotations
 import argparse
+import os
 import re
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Dict, List, Tuple
 
 
@@ -229,12 +230,10 @@ def compile_handbook(outline_path: Path, extracted_dir: Path,
                 # insert corresponding images
                 images = _get_images_for_text(txt_file, filtered_dir, extracted_dir)
                 for img in images:
-                    # relative path from output to image
-                    try:
-                        rel = img.relative_to(output_path.parent)
-                    except ValueError:
-                        # make absolute path relative
-                        rel = img
+                    # relative path from output .md file to image
+                    rel = os.path.relpath(img, output_path.parent)
+                    # normalize to forward slashes for Markdown
+                    rel = PurePosixPath(Path(rel).as_posix())
                     parts.append(f"\n![{img.stem}]({rel})\n")
 
     # keyword index
