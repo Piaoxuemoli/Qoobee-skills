@@ -14,7 +14,7 @@ from .slides.section import add_section_divider, add_stat_hero
 from .slides.comparison import add_pros_cons, add_before_after
 from .slides.timeline import add_process_flow, add_phases
 from .slides.summary import add_three_takeaways, add_closing, add_quote
-from .slides.visual import add_diagram, add_table_slide
+from .slides.visual import add_diagram, add_icon_grid, add_table_slide
 
 
 # --- Layout -> template mapping ---
@@ -35,6 +35,7 @@ _LAYOUT_MAP = {
     "big-number": "stat_hero",
     "three-takeaways": "three_takeaways",
     "closing-statement": "closing",
+    "icon-grid": "icon_grid",
 }
 
 def _process_flow_adapter(prs, *, steps=None, **kwargs):
@@ -58,6 +59,7 @@ _REGISTRY = {
     "closing": add_closing,
     "quote": add_quote,
     "diagram": add_diagram,
+    "icon_grid": add_icon_grid,
     "table": add_table_slide,
 }
 
@@ -88,6 +90,9 @@ def infer_slide_type(spec: Dict[str, Any]) -> str:
     if "headers" in spec and "rows" in spec:
         return "table"
     if "items" in spec and isinstance(spec["items"], list):
+        # icon_grid items are dicts with "title" key; diagram items are strings
+        if spec["items"] and isinstance(spec["items"][0], dict):
+            return "icon_grid"
         return "diagram"
     if "bullets" in spec:
         return "bullet_list"

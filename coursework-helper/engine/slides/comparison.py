@@ -8,7 +8,7 @@ from pptx.util import Inches
 
 from ..base import (
     blank_slide, add_chrome, add_rect, add_line, add_textbox,
-    write_paragraph, add_oval,
+    write_paragraph, add_oval, add_icon_circle, add_accent_bar,
 )
 from ..theme import Theme, DEFAULT_THEME
 
@@ -21,7 +21,7 @@ def add_pros_cons(prs, *,
                   cons_label: str = "Cons / Disadvantages",
                   page_number=None,
                   theme: Theme = DEFAULT_THEME):
-    """Two-column pros/cons with green/red headers."""
+    """Two-column pros/cons with green/red headers and icon circles."""
     slide = blank_slide(prs)
     add_chrome(slide, title=title, theme=theme, page_number=page_number)
     pal, typo, layout = theme.palette, theme.typography, theme.layout
@@ -39,26 +39,39 @@ def add_pros_cons(prs, *,
     ]
     for left, label, items, color, glyph in sides:
         head_h = 0.5
-        add_rect(slide, left, body_top, col_w, head_h, fill=color)
-        tb = add_textbox(slide, left + 0.2, body_top, col_w - 0.4, head_h,
+        # Accent bar at top of header
+        add_accent_bar(slide, left, body_top, col_w, 0.05, color=color)
+        # Header background
+        add_rect(slide, left, body_top + 0.05, col_w, head_h - 0.05,
+                 fill=color)
+        # Icon circle in header
+        add_icon_circle(slide, left + 0.3, body_top + 0.05 + (head_h - 0.05) / 2,
+                        0.3, glyph, fill=pal.white, text_color=color,
+                        font_size=12, theme=theme)
+        # Header text
+        tb = add_textbox(slide, left + 0.55, body_top + 0.05,
+                         col_w - 0.75, head_h - 0.05,
                          anchor=MSO_ANCHOR.MIDDLE)
         write_paragraph(tb.text_frame, label,
                         size=typo.section_title_size + 2, bold=True,
                         color=pal.white, family=typo.family, first=True)
 
+        # Card body
         card_top = body_top + head_h
         card_h = body_h - head_h
         add_rect(slide, left, card_top, col_w, card_h, fill=pal.soft_gray)
 
-        ny = card_top + 0.2
-        item_h = max(0.45, (card_h - 0.4) / max(len(items), 1))
+        ny = card_top + 0.15
+        item_h = max(0.45, (card_h - 0.3) / max(len(items), 1))
         for it in items:
-            tb = add_textbox(slide, left + 0.2, ny, 0.35, item_h,
+            # Glyph icon
+            tb = add_textbox(slide, left + 0.15, ny, 0.35, item_h,
                              anchor=MSO_ANCHOR.TOP)
             write_paragraph(tb.text_frame, glyph,
                             size=typo.body_size + 2, bold=True,
                             color=color, family=typo.family, first=True)
-            tb = add_textbox(slide, left + 0.6, ny, col_w - 0.8, item_h,
+            # Item text
+            tb = add_textbox(slide, left + 0.55, ny, col_w - 0.75, item_h,
                              anchor=MSO_ANCHOR.TOP)
             write_paragraph(tb.text_frame, it, size=typo.body_size,
                             color=pal.text_dark, family=typo.family,
@@ -75,7 +88,7 @@ def add_before_after(prs, *,
                      right_items: Sequence[str],
                      page_number=None,
                      theme: Theme = DEFAULT_THEME):
-    """Before/After comparison with connecting arrow."""
+    """Before/After comparison with connecting arrow and icon badges."""
     slide = blank_slide(prs)
     add_chrome(slide, title=title, theme=theme, page_number=page_number)
     pal, typo, layout = theme.palette, theme.typography, theme.layout
@@ -88,19 +101,29 @@ def add_before_after(prs, *,
     col_w = (width - arrow_w) / 2
 
     sides = [
-        (layout.margin_left_in, left_label, left_items, pal.footer_gray),
+        (layout.margin_left_in, left_label, left_items, pal.footer_gray, "A"),
         (layout.margin_left_in + col_w + arrow_w, right_label, right_items,
-         pal.primary),
+         pal.primary, "B"),
     ]
-    for left, label, items, color in sides:
+    for left, label, items, color, badge_text in sides:
         head_h = 0.5
-        add_rect(slide, left, body_top, col_w, head_h, fill=color)
-        tb = add_textbox(slide, left + 0.2, body_top, col_w - 0.4, head_h,
+        # Header with accent bar
+        add_accent_bar(slide, left, body_top, col_w, 0.05, color=color)
+        add_rect(slide, left, body_top + 0.05, col_w, head_h - 0.05,
+                 fill=color)
+        # Badge in header
+        add_icon_circle(slide, left + 0.3, body_top + 0.05 + (head_h - 0.05) / 2,
+                        0.3, badge_text, fill=pal.white, text_color=color,
+                        font_size=11, theme=theme)
+        # Header text
+        tb = add_textbox(slide, left + 0.55, body_top + 0.05,
+                         col_w - 0.75, head_h - 0.05,
                          anchor=MSO_ANCHOR.MIDDLE)
         write_paragraph(tb.text_frame, label,
                         size=typo.section_title_size + 2, bold=True,
                         color=pal.white, family=typo.family, first=True)
 
+        # Card body
         card_top = body_top + head_h
         card_h = body_h - head_h
         add_rect(slide, left, card_top, col_w, card_h, fill=pal.soft_gray)
