@@ -114,6 +114,7 @@ class PresentationBuilder:
         self.auto_page_numbers = auto_page_numbers
         self.prs = init_presentation(theme)
         self._page = 0
+        self._specs: list = []
 
     def add(self, slide_type: str, **kwargs):
         fn = _REGISTRY.get(slide_type)
@@ -139,6 +140,13 @@ class PresentationBuilder:
             if mapped and mapped != "bullet_list":
                 slide_type = mapped
 
+        # Track spec for potential Slidev export
+        self._specs.append({
+            "type": slide_type,
+            "_speaker_notes": speaker_notes or "",
+            **{k: v for k, v in spec.items() if k != "page_number"},
+        })
+
         slide = self.add(slide_type, **spec)
 
         # Apply speaker notes after slide creation
@@ -156,6 +164,13 @@ class PresentationBuilder:
     def save(self, path: str):
         self.prs.save(path)
         return path
+
+    def save_slidev(self, output_dir: str, *,
+                    title: str = "Presentation",
+                    theme: str = "default") -> str:
+        """Export the current deck as a Slidev project directory."""
+        from .slidev_export import export_slidev
+        return export_slidev(self._specs, output_dir, title=title, theme=theme)
 
 
 def build_from_slides_md(slides_md_path: str, output_path: str, *,
