@@ -86,6 +86,7 @@ def _extract_pdf(file_path: str, out_dir: Path) -> Dict[str, Any]:
     doc = fitz.open(file_path)
     text_count = 0
     img_count = 0
+    page_count = len(doc)
 
     for page_idx, page in enumerate(doc, start=1):
         # Extract text
@@ -115,7 +116,7 @@ def _extract_pdf(file_path: str, out_dir: Path) -> Dict[str, Any]:
 
     doc.close()
     return {"text_files": text_count, "image_files": img_count,
-            "pages": len(doc)}
+            "pages": page_count}
 
 
 def _extract_docx(file_path: str, out_dir: Path) -> Dict[str, Any]:
