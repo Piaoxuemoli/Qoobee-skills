@@ -1,107 +1,52 @@
 # Handbook Writer Agent
 
-Compile ALL extracted course materials into a single organized study handbook.
+The handbook is compiled by `scripts/compile_handbook.py` — this agent only
+handles QA verification after compilation.
 
 ## Role
 
-You are a **compiler / organizer**, NOT an author. Your job is to take the raw
-extracted text from `01_extracted/` and arrange it into a structured handbook
-following the outline in `02_outline/outline.md`.
-
-**You must NOT summarize, shorten, paraphrase, or rewrite any source content.**
-Every sentence from every source file must appear in the handbook. You may
-reformat (headings, lists, tables, code blocks) but you must not delete content.
-
-## Inputs
-
-- `02_outline/outline.md` — chapter/topic structure with source file references
-- `01_extracted/` — all extracted text and images (original)
-- `01_filtered/` — filtered images (decorative removed)
-- `00_admin/study_context.json` — course name and configuration
-- `00_admin/filter_report.json` — which images were kept
+After `compile_handbook.py` produces `04_final/final_handbook.md`, verify that
+the output is complete and correct.
 
 ## Process
 
-### Step 1: Read the Outline
+### Step 1: Verify Completeness
 
-Read `02_outline/outline.md` to understand the chapter structure. Each topic
-lists the source files that contain its content.
+Read the outline (`02_outline/outline.md`) and check that every source directory
+listed appears in the handbook.
 
-### Step 2: Compile Chapter by Chapter
+### Step 2: Verify Image References
 
-For each chapter in the outline:
+Check that all `![...](...)` image paths in the handbook point to files that
+actually exist.
 
-1. **Read every source file** listed for that chapter from `01_extracted/`
-2. **Copy the full text content** into the handbook under the appropriate section
-3. **Insert key images** from `01_filtered/` at the position where they appear
-   in the source (e.g., if slide_05 has both text and an image, place the image
-   after the slide's text)
-4. **Preserve all**: definitions, formulas, code blocks, example problems, tables,
-   lists, explanations, footnotes — everything
+### Step 3: Write QA Report
 
-### Step 3: Add Navigation
-
-- Generate a table of contents with links to all chapters and sections
-- Add a keyword index at the end
-
-### Step 4: Write Output
-
-Write `03_drafts/draft_handbook.md`, then copy to `04_final/final_handbook.md`.
-
-### Step 5: QA Check
-
-Write `06_qa/qa_report.md` checking:
-- Every source file from the outline appears in the handbook
-- All image paths are valid (files exist at referenced paths)
-- No section is suspiciously short (would indicate summarization)
-
-## Output Structure
+Write `06_qa/qa_report.md`:
 
 ```markdown
-# <Course Name> — 速查手册
+# QA Report
 
-> <source info>
+## Content Coverage
+- Source directories in outline: N
+- Source directories in handbook: N
+- Missing: [list, if any]
 
-## 目录
-- [第一章 <Title>](#第一章-<title>)
-  - [1.1 <Topic>](#11-<topic>)
-...
+## Image References
+- Total image references: N
+- Valid (file exists): N
+- Broken (file missing): [list, if any]
 
----
+## Content Size
+- Total characters: N
+- Total lines: N
 
-## 第一章 <Title>
-
-### 1.1 <Topic>
-
-<full text from source file 1, not summarized>
-
-![<description>](../01_filtered/<source>/<image>)
-
-<full text from source file 2, not summarized>
-
-...
-
----
-
-## 关键词索引
-| 关键词 | 位置 |
-|--------|------|
-...
+## Issues
+- [any problems found]
 ```
 
-## CRITICAL RULES
+## Rules
 
-1. **You are an organizer, not an author.** Arrange content; do not create it.
-2. **Every text file's content must appear IN FULL.** If a slide has 200 words,
-   all 200 words must be in the handbook. Summarizing to 50 words is a failure.
-3. **Test**: If a student reads only the handbook (not the original files),
-   they must have access to **at least** as much information as in the originals.
-4. **Do not fabricate** content not present in source materials.
-5. If source content is unclear or incomplete, add `[原文如此]` — do not fix it.
-6. Images use relative paths from `04_final/` to `01_filtered/`:
-   `![desc](../01_filtered/<source>/<file>.png)`
-7. If there are too many images for a section, include at least the ones that
-   contain formulas, diagrams, or data that cannot be represented as text.
-8. Keep the tone neutral and reference-like.
-9. Use `---` horizontal rules to separate major chapters.
-10. For code blocks, use fenced code blocks with language hints.
+- Do NOT modify the handbook — only report issues.
+- The script is the source of truth for content. If something is missing,
+  the outline needs to be updated and the script re-run.

@@ -2,7 +2,7 @@
 name: study-index
 description: >
   整理课程材料为带目录索引的速查手册。适用于开卷考试复习资料、课程笔记整理、
-  知识收藏整理。输入多个 PPT/PDF/文档，输出结构化 Markdown + PDF。
+  知识收藏整理。输入多个 PPT/PDF/文档，输出结构化 Markdown（全部内容+索引）。
   Use when the user mentions 开卷考试, 复习资料, 考试速查, 知识整理, 整理笔记,
   资料汇总, 速查手册, or asks to organize scattered course materials into an
   indexed handbook for studying or open-book exams.
@@ -12,17 +12,21 @@ description: >
 
 # Study Index Skill
 
-将散乱的课程材料（PPT、PDF、文档、笔记）整理成一本带目录、带索引、带例题、带关键图片的速查手册。核心原则：**不丢失信息**——源材料中的所有文字内容必须完整保留（不总结、不删减），关键图片、公式、图表必须提取并放到手册对应位置。
+将散乱的课程材料（PPT、PDF、文档、笔记）整理成一本**包含全部原文内容**的速查手册。
+
+核心原则：**不丢失信息**——源材料中的所有文字内容必须完整保留（不总结、不删减），
+关键图片、公式、图表必须提取并放到手册对应位置。
+
+**关键：使用脚本自动拼接所有文本内容，而不是让 AI 来"写"手册。AI 只负责生成大纲。**
 
 ## Architecture
 
 ```text
 User provides course materials
-  -> Extract: pull text + images from each source file
-  -> Filter: remove decorative images (logos, backgrounds, tiny icons)
-  -> Organize: group by topic/chapter, identify key images, list all source files
-  -> Compile: arrange ALL source content into structured handbook (no summarizing)
-  -> Export: Markdown + PDF (printable)
+  -> Extract: pull text + images from each source file (extract_content.py)
+  -> Filter: remove decorative images (filter_images.py)
+  -> Organize: AI groups sources by chapter, writes outline (knowledge-organizer)
+  -> Compile: script concatenates ALL text into handbook (compile_handbook.py)
 ```
 
 ## Startup Layer
@@ -33,7 +37,6 @@ Infer from user input:
 
 - `course_name`: course or topic name
 - `source_files`: list of PPT/PDF/DOCX/MD/TXT files or directories
-- `delivery_formats`: `md` + `pdf` (default), or user-specified
 - `purpose`: exam prep (default), review, reference
 - `language`: Chinese if prompt is Chinese, English if English
 
@@ -42,7 +45,7 @@ Default assumptions:
 | Missing item | Default |
 |--------------|---------|
 | Language | Chinese if prompt is Chinese |
-| Output formats | Markdown + PDF |
+| Output format | Markdown |
 | Organization | By chapter/topic (auto-detected from source structure) |
 | Images | Extract all, keep key images in final handbook |
 
@@ -51,7 +54,7 @@ Default assumptions:
 ```bash
 python study-index/scripts/init_output_dir.py <course-name> \
   --source-files "<path1>|<path2>" \
-  --delivery-formats "md|pdf"
+  --delivery-formats "md"
 ```
 
 Creates:
@@ -74,15 +77,10 @@ study-index/outputs/<course-name>/
 │       └── slide_01_img_01.png
 ├── 02_outline/
 │   └── outline.md
-├── 03_drafts/
-│   └── draft_handbook.md
 ├── 04_final/
-│   └── final_handbook.md
-├── 05_exports/
-│   └── final_handbook.pdf
-├── 06_qa/
-│   └── qa_report.md
-└── assets/
+│   └── final_handbook.md  # complete handbook with ALL content + index
+└── 06_qa/
+    └── qa_report.md
 ```
 
 ### 3. Check Official Skills
@@ -96,19 +94,11 @@ Ensure document reading skills are available:
 | `.ppt`, `.pptx` | `pptx` |
 | `.xls`, `.xlsx` | `xlsx` |
 
-If `lab-report/scripts/check_official_skills.py` is available:
-
-```bash
-python lab-report/scripts/check_official_skills.py --install --source-files "<path1>|<path2>"
-```
-
 ## Workflow
 
 ### Step 1: Extract Content
 
 Read `agents/material-extractor.md`.
-
-Run the extraction script:
 
 ```bash
 python study-index/scripts/extract_content.py \
@@ -117,11 +107,7 @@ python study-index/scripts/extract_content.py \
   --manifest "<output_dir>/00_admin/extract_manifest.json"
 ```
 
-This extracts text and images from all source files into per-source directories.
-
-### Step 1.5: Filter Images
-
-Run the image filter to remove decorative images (logos, backgrounds, tiny icons):
+### Step 2: Filter Images
 
 ```bash
 python study-index/scripts/filter_images.py \
@@ -130,57 +116,44 @@ python study-index/scripts/filter_images.py \
   --report "<output_dir>/00_admin/filter_report.json"
 ```
 
-This reduces the image count (e.g., 1400 -> ~800) so the organizer can focus
-on educational images.
-
-### Step 2: Organize Knowledge
+### Step 3: Organize Knowledge (AI)
 
 Read `agents/knowledge-organizer.md`.
 
-- Read all extracted text from `01_extracted/`
-- Browse filtered images from `01_filtered/` to identify key ones
-- Group content by chapter/topic
-- Write `02_outline/outline.md` with structured knowledge map
-- **Every source file must be listed** in the outline with its path and character count
+- Read extracted text to understand course structure
+- Group source directories by chapter/topic
+- Write `02_outline/outline.md` with the mapping:
+  ```
+  ## Chapter 1: <title>
+  - 来源: source_dir_1, source_dir_2
+  ```
 
-### Step 3: Write Handbook
-
-Read `agents/handbook-writer.md`.
-
-- **Compile** (not summarize) all source content into `03_drafts/draft_handbook.md`
-- Copy to `04_final/final_handbook.md`
-- Images referenced with relative paths: `![desc](../01_filtered/source/slide_01_img_01.png)`
-- Run QA checks: every source file must appear, all image paths must be valid
-
-### Step 4: Export
-
-Convert Markdown to PDF:
+### Step 4: Compile Handbook (Script)
 
 ```bash
-# Try pandoc first
-pandoc 04_final/final_handbook.md -o 05_exports/final_handbook.pdf \
-  --resource-path="<output_dir>/04_final:<output_dir>/01_filtered"
-
-# Fallback: Python weasyprint
-python -c "
-from study_index_export import md_to_pdf
-md_to_pdf('<output_dir>/04_final/final_handbook.md',
-          '<output_dir>/05_exports/final_handbook.pdf',
-          resource_dirs=['<output_dir>/01_filtered'])
-"
+python study-index/scripts/compile_handbook.py \
+  --outline "<output_dir>/02_outline/outline.md" \
+  --extracted "<output_dir>/01_extracted/" \
+  --filtered "<output_dir>/01_filtered/" \
+  --output "<output_dir>/04_final/final_handbook.md" \
+  --course-name "<course name>"
 ```
+
+This script:
+- Reads the outline to get chapter-to-source mapping
+- For each chapter, reads ALL text files from the source directories
+- Inserts corresponding images at the right positions
+- Adds table of contents and keyword index
+- **Preserves every character** from the source files — no summarization
 
 ## Quality Bar
 
 A good study handbook should:
 
 - **Contain ALL text content** from source materials — not a summary, but a compilation
-- Cover all topics from source materials without gaps
-- Include every key image, formula, and diagram from the sources
+- Every source file's full text appears in the handbook
+- Include key images, formulas, and diagrams from the sources
 - Have a clear table of contents for quick navigation
-- Attach relevant example problems to each knowledge point
-- Be printable as a single PDF with images inline
-- Use consistent formatting throughout
 - Have a keyword index for quick lookup during exams
 - **Test**: A student reading only the handbook should have ≥ the information in the originals
 
@@ -189,12 +162,11 @@ A good study handbook should:
 - Do not fabricate content not present in source materials.
 - If a source file cannot be read, record the failure in `extract_manifest.json` and continue.
 - If an image cannot be extracted, note it in the output with a `[图片提取失败]` placeholder.
-- Do not claim PDF was generated if export failed.
 
 ## Dependencies
 
 - Python + `python-pptx` for PPTX text/image extraction
 - Python + `PyMuPDF` (`fitz`) for PDF text/image extraction
 - Python + `python-docx` for DOCX text/image extraction
-- `pandoc` (optional) for Markdown → PDF conversion
+- Python + `Pillow` for image filtering
 - Official `pdf`, `docx`, `pptx` skills for reading files
