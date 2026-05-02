@@ -50,9 +50,9 @@ Automate lab reports with reusable local profile data, material-folder intake, o
 
 ### [coursework-helper](coursework-helper/) — [详细文档](docs/coursework-helper.md)
 
-面向大学通识课、选修课和低风险课程作业：快速生成 PPT、小论文、读书报告、观后感、课堂展示稿和演讲稿。内置 PPT 引擎（15 个模板、中文主题系统、slide card 解析器），支持 Markdown slide card 直接导出为带样式和 speaker notes 的 PPTX。支持材料目录索引、证据备注、Markdown/DOCX/PDF/PPTX 交付。
+面向大学通识课、选修课和低风险课程作业：快速生成 PPT、小论文、读书报告、观后感、课堂展示稿和演讲稿。内置 PPT 引擎（15 个模板、中文主题系统、slide card 解析器、装饰原语），支持 Markdown slide card 直接导出为带样式和 speaker notes 的 PPTX。可选 Slidev 输出路径：浏览器实时预览、渐进动画、代码高亮、Mermaid 图表。视频链接默认使用 Bilibili 等国内平台。支持材料目录索引、证据备注、Markdown/DOCX/PDF/PPTX 交付。
 
-Create practical deliverables for general education and low-stakes coursework: slides, short papers, reading reports, reflection essays, classroom presentations, and speech scripts. Built-in PPT engine with 15 templates, Chinese theme system, and slide card parser — exports styled PPTX with speaker notes directly from structured Markdown.
+Create practical deliverables for general education and low-stakes coursework: slides, short papers, reading reports, reflection essays, classroom presentations, and speech scripts. Built-in PPT engine with 15 templates, Chinese theme system, slide card parser, and decoration primitives — exports styled PPTX with speaker notes directly from structured Markdown. Optional Slidev output path for browser preview, progressive animations, code highlighting, and Mermaid diagrams. Video links default to Bilibili and other Chinese platforms. Supports material indexing, evidence notes, and Markdown/DOCX/PDF/PPTX delivery.
 
 ### [terminal-screenshot](terminal-screenshot/) — [详细文档](docs/terminal-screenshot.md)
 
@@ -76,7 +76,7 @@ Qoobee-skills/
 │   └── terminal-screenshot.md
 ├── coursework-helper/      # 通识课/水课作业 skill 代码
 │   ├── SKILL.md
-│   ├── engine/             # PPT 引擎（theme, builder, 15 templates, parser）
+│   ├── engine/             # PPT 引擎（theme, builder, 15 templates, parser, slidev_export）
 │   ├── agents/             # 子 agent 定义
 │   ├── scripts/            # 工具脚本
 │   └── ...
@@ -90,7 +90,8 @@ Qoobee-skills/
     ├── mckinsey-pptx/
     ├── office-ppt-mcp/
     ├── supercurses-powerpoint/
-    └── okppt/
+    ├── okppt/
+    └── slidev/
 ```
 
 每个 skill 的 SKILL.md 是 Claude Code 自动加载的技能指令文件，详细文档在 `docs/` 目录中。
