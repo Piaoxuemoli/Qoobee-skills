@@ -68,13 +68,13 @@ Automate lab reports with reusable profile data, material-folder intake, auto mo
 
 ---
 
-### [coursework-helper](docs/coursework-helper.md)
+### [paper-writer](docs/paper-writer.md)
 
-通识课 / 选修课作业一键生成：PPT（15 个模板 + 主题系统 + Slidev 可选）、小论文、读书报告、观后感、演讲稿。内置 PPT 引擎，Markdown slide card 直接导出带 speaker notes 的 PPTX。视频链接默认 Bilibili 等国内平台。
+学术论文路由器：不自己实现具体能力，而是按需从 **233 个专业 skills** 中加载所需能力，调度子代理执行，最后负责格式检查和 DOCX 导出。主 agent 只做路由，子代理自发现 skills 并全权执行。
 
-**设计亮点：** PPT 引擎（15 模板） · 多格式输出 · 国内适配 · Slidev 可选
+**设计亮点：** 路由器架构（主 agent 零污染） · 三层检索（核心 10 + 领域 164 + 工具 59） · 格式检查 · DOCX 导出 · 多语种支持 · 署名可选
 
-Generate deliverables for general education coursework: slides (15 templates + theme system + optional Slidev), short papers, reading reports, reflection essays, and speech scripts. Built-in PPT engine exports styled PPTX with speaker notes from structured Markdown.
+Academic paper router: loads from 233 professional skills on demand, dispatches sub-agents, handles format checking and DOCX export. Router architecture keeps the main agent context clean.
 
 ---
 
@@ -90,6 +90,16 @@ Render terminal command outputs as realistic PNG screenshots. High-fidelity temp
 
 ---
 
+### [coursework-helper](docs/coursework-helper.md)
+
+通识课 / 选修课作业一键生成：PPT（15 个模板 + 主题系统 + Slidev 可选）、小论文、读书报告、观后感、演讲稿。内置 PPT 引擎，Markdown slide card 直接导出带 speaker notes 的 PPTX。视频链接默认 Bilibili 等国内平台。
+
+**设计亮点：** PPT 引擎（15 模板） · 多格式输出 · 国内适配 · Slidev 可选
+
+Generate deliverables for general education coursework: slides (15 templates + theme system + optional Slidev), short papers, reading reports, reflection essays, and speech scripts. Built-in PPT engine exports styled PPTX with speaker notes from structured Markdown.
+
+---
+
 ### [study-index](docs/study-index.md)
 
 将散乱的课程材料（PPT、PDF、文档、笔记）整理成一本带目录、带索引、带关键图片的速查手册。核心原则：不丢失信息——源材料中的全部文字内容完整保留，关键图片自动筛选并放到手册对应位置。脚本拼接全部文本，AI 只负责生成大纲。
@@ -97,16 +107,6 @@ Render terminal command outputs as realistic PNG screenshots. High-fidelity temp
 **设计亮点：** 零信息丢失 · 关键图片筛选 · 自动索引 · 脚本拼接（非 AI 编写）
 
 Organize scattered course materials into an indexed study handbook. Core principle: no information loss — all text preserved in full, key images auto-filtered and placed correctly. Scripts compile all text; AI only writes the outline.
-
----
-
-### [paper-writer](docs/paper-writer.md)
-
-学术论文路由器：不自己实现具体能力，而是按需从 **233 个专业 skills** 中加载所需能力，调度子代理执行，最后负责格式检查和 DOCX 导出。主 agent 只做路由，子代理自发现 skills 并全权执行。
-
-**设计亮点：** 路由器架构（主 agent 零污染） · 三层检索（核心 10 + 领域 164 + 工具 59） · 格式检查 · DOCX 导出 · 多语种支持 · 署名可选
-
-Academic paper router: loads from 233 professional skills on demand, dispatches sub-agents, handles format checking and DOCX export. Router architecture keeps the main agent context clean.
 
 ---
 
