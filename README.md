@@ -8,32 +8,27 @@ A collection of Claude Code / Cursor Skills that automate college coursework —
 
 ## 快速配置 / Quick Start
 
-在你的**项目根目录**下执行以下命令，将 skills 安装到当前项目：
+在你的**项目根目录**下，任选一种方式安装：
 
-| 环境 | 安装路径 |
-|------|---------|
-| Claude Code | `<项目根目录>/.claude/skills/` |
-| Cursor | `<项目根目录>/.cursor/skills/` |
+### 方式一：脚本一键安装
 
-### Claude Code
+在项目根目录下执行（需要 [Node.js](https://nodejs.org/)）：
 
 ```bash
-# 在你的项目根目录下执行
-git clone https://github.com/Piaoxuemoli/Auto-college.git /tmp/auto-college
-mkdir -p .claude/skills
-cp -r /tmp/auto-college/coursework-helper /tmp/auto-college/lab-report /tmp/auto-college/terminal-screenshot /tmp/auto-college/study-index .claude/skills/
-rm -rf /tmp/auto-college
+curl -fsSL https://raw.githubusercontent.com/Piaoxuemoli/Auto-college/master/setup.js | node
 ```
 
-### Cursor
+自动检测 Claude Code / Cursor，clone 仓库、复制 skills、清理临时文件，一步完成。
 
-```bash
-# 在你的项目根目录下执行
-git clone https://github.com/Piaoxuemoli/Auto-college.git /tmp/auto-college
-mkdir -p .cursor/skills
-cp -r /tmp/auto-college/coursework-helper /tmp/auto-college/lab-report /tmp/auto-college/terminal-screenshot /tmp/auto-college/study-index .cursor/skills/
-rm -rf /tmp/auto-college
+### 方式二：让 Agent 帮你装
+
+对你的 Claude Code 或 Cursor Agent 说：
+
+```text
+帮我从 https://github.com/Piaoxuemoli/Auto-college 安装 skills 到当前项目
 ```
+
+Agent 会自动 clone、复制、配置。
 
 配置完成后，直接在对话中描述任务即可：
 
