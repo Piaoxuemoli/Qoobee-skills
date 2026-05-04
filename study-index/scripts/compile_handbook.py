@@ -3,6 +3,7 @@
 Reads the outline to map chapters to source directories, then concatenates
 ALL text files from each source directory into one complete handbook.
 No summarization — every character from every source file is preserved.
+Text is formatted with markdown: headings, lists, code blocks, etc.
 
 Usage:
     python compile_handbook.py \
@@ -20,16 +21,11 @@ from pathlib import Path, PurePosixPath
 from typing import Dict, List, Tuple
 
 
+# ---------------------------------------------------------------------------
+# Outline parsing
+# ---------------------------------------------------------------------------
+
 def _parse_outline(outline_path: Path) -> List[Dict]:
-    """Parse outline.md to extract chapter-to-source mapping.
-
-    Expected format in outline:
-        ## Chapter 1: <title>
-        - 来源: source_dir_1, source_dir_2
-
-    Returns list of:
-        {"chapter": "第一章 <title>", "sources": ["dir1", "dir2"], "subsections": [...]}
-    """
     text = outline_path.read_text(encoding="utf-8")
     chapters = []
     current_chapter = None
@@ -37,17 +33,11 @@ def _parse_outline(outline_path: Path) -> List[Dict]:
     for line in text.splitlines():
         line = line.strip()
 
-        # match chapter heading: ## Chapter N: Title or ## 第N章 Title
         ch_match = re.match(r"^##\s+(.+)", line)
         if ch_match and not line.startswith("###"):
             heading = ch_match.group(1).strip()
-            # skip non-chapter headings like "## 关键词索引"
             if re.match(r"(Chapter|第)", heading, re.IGNORECASE):
-                current_chapter = {
-                    "chapter": heading,
-                    "sources": [],
-                    "subsections": [],
-                }
+                current_chapter = {"chapter": heading, "sources": [], "subsections": []}
                 chapters.append(current_chapter)
             else:
                 current_chapter = None
@@ -56,14 +46,11 @@ def _parse_outline(outline_path: Path) -> List[Dict]:
         if current_chapter is None:
             continue
 
-        # match source line: - 来源: dir1, dir2
         src_match = re.match(r"^-\s*来源:\s*(.+)", line)
         if src_match:
-            dirs = [d.strip() for d in src_match.group(1).split(",") if d.strip()]
-            current_chapter["sources"] = dirs
+            current_chapter["sources"] = [d.strip() for d in src_match.group(1).split(",") if d.strip()]
             continue
 
-        # match subsection: ### N.M Title
         sub_match = re.match(r"^###\s+(.+)", line)
         if sub_match:
             current_chapter["subsections"].append(sub_match.group(1).strip())
@@ -71,57 +58,183 @@ def _parse_outline(outline_path: Path) -> List[Dict]:
     return chapters
 
 
-def _get_text_files(src_dir: Path) -> List[Path]:
-    """Get all text files from a source directory, sorted naturally."""
-    txt_files = sorted(src_dir.glob("*.txt"))
-    return txt_files
+def _chapter_sort_key(chapter: Dict) -> Tuple[int, int]:
+    nums = re.findall(r"\d+", chapter["chapter"])
+    return (int(nums[0]), 0) if nums else (999, 0)
 
 
-def _get_images_for_text(txt_file: Path, filtered_dir: Path | None,
-                          extracted_dir: Path) -> List[Path]:
-    """Find images corresponding to a text file.
+# ---------------------------------------------------------------------------
+# Text formatting
+# ---------------------------------------------------------------------------
 
-    For slide_05.txt -> look for slide_05_img_*.png in the same directory.
-    Search filtered first, fall back to extracted.
+# Patterns that indicate a line is code
+_CODE_PATTERNS = re.compile(
+    r"(__global__|__shared__|__device__|__host__|#include|#define|"
+    r"\bvoid\s+\w+\s*\(|\bint\s+main\s*\(|"
+    r"^\s*(for|while|if)\s*\(|^\s*\w+\s*\[.*\]\s*=|"
+    r"MPI_\w+|cudaMalloc|cudaMemcpy|"
+    r"BLOCK_LOW|BLOCK_HIGH|BLOCK_SIZE|BLOCK_OWNER)",
+    re.MULTILINE,
+)
+
+# Bullet characters from PPT extraction
+_BULLET_RE = re.compile(r"^[\s]*[•▪◦‣⁃–—]\s*")
+_SUB_BULLET_RE = re.compile(r"^[\s]*[·∙→►▸▹]\s*")
+
+# Standalone page/slide number
+_PAGE_NUM_RE = re.compile(r"^\d{1,4}$")
+
+# URL pattern
+_URL_RE = re.compile(r"(https?://[^\s]+)")
+
+# Common PPT shape labels / watermarks to strip
+_NOISE_WORDS = {
+    "芯片", "CPU", "GPU", "NVIDIA", "CUDA", "MPI", "OpenMP",
+    "应用", "函数库", "编程语言", "编译器指令", "硬件", "软件",
+    "图", "表", "公式", "注意", "备注", "来源", "参考",
+}
+
+# Line that looks like a C/C++ code fragment
+_CODE_LINE_RE = re.compile(
+    r"(__global__|__shared__|__device__|#include|#define|"
+    r"\bvoid\s+\w+\s*\(|^\s*\{|^\s*\}|^\s*//|"
+    r"^\s*for\s*\(|^\s*if\s*\(|^\s*while\s*\(|"
+    r"MPI_\w+|cudaMalloc|cudaMemcpy|"
+    r"BLOCK_LOW|BLOCK_HIGH|BLOCK_SIZE)"
+)
+
+
+def _is_code_line(line: str) -> bool:
+    return bool(_CODE_LINE_RE.search(line))
+
+
+def _format_text(raw: str) -> str:
+    """Format raw extracted text into readable markdown.
+
+    Rules:
+    - Remove standalone page/slide numbers
+    - Remove PPT shape labels (noise words like 芯片, CPU, etc.)
+    - Bullet characters -> markdown bullets
+    - Code-like lines -> wrap in code blocks
+    - URLs -> keep as-is (markdown auto-links)
+    - Preserve all content (no summarization)
     """
-    stem = txt_file.stem  # e.g. "slide_05" or "page_01"
-    parent_name = txt_file.parent.name  # source dir name
+    lines = raw.splitlines()
+    if not lines:
+        return ""
+
+    # Pass 1: clean up lines
+    cleaned = []
+    for line in lines:
+        stripped = line.strip()
+
+        if not stripped:
+            cleaned.append("")
+            continue
+
+        # skip standalone page numbers
+        if _PAGE_NUM_RE.match(stripped):
+            continue
+
+        # skip PPT shape labels / noise words
+        if stripped in _NOISE_WORDS:
+            continue
+
+        # skip very short non-content lines (1-2 chars, not alphanumeric)
+        if len(stripped) <= 2 and not any(c.isalnum() for c in stripped):
+            continue
+
+        cleaned.append(stripped)
+
+    if not cleaned:
+        return ""
+
+    # Pass 2: detect and format
+    result = []
+    in_code_block = False
+
+    for line in cleaned:
+        if not line:
+            if in_code_block:
+                result.append("```")
+                in_code_block = False
+            result.append("")
+            continue
+
+        # code block detection
+        if _is_code_line(line):
+            if not in_code_block:
+                result.append("```c")
+                in_code_block = True
+            result.append(line)
+            continue
+        elif in_code_block:
+            result.append("```")
+            in_code_block = False
+
+        # bullet points
+        if _BULLET_RE.match(line):
+            line = _BULLET_RE.sub("- ", line)
+            result.append(line)
+            continue
+
+        if _SUB_BULLET_RE.match(line):
+            line = _SUB_BULLET_RE.sub("  - ", line)
+            result.append(line)
+            continue
+
+        # regular text
+        result.append(line)
+
+    # close any open code block
+    if in_code_block:
+        result.append("```")
+
+    # join and clean up excessive blank lines
+    text = "\n".join(result)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
+# ---------------------------------------------------------------------------
+# Image handling
+# ---------------------------------------------------------------------------
+
+def _get_images_for_text(txt_file: Path, filtered_dir: Path | None) -> List[Path]:
+    """Find filtered images corresponding to a text file.
+
+    Only returns images from 01_filtered/ — never falls back to 01_extracted/.
+    This ensures all images passed the quality filter.
+    """
+    if filtered_dir is None:
+        return []
+
+    stem = txt_file.stem
+    parent_name = txt_file.parent.name
+    fdir = filtered_dir / parent_name
+    if not fdir.is_dir():
+        return []
 
     images = []
-    # search filtered first
-    search_dirs = []
-    if filtered_dir:
-        fdir = filtered_dir / parent_name
-        if fdir.is_dir():
-            search_dirs.append(fdir)
-    search_dirs.append(txt_file.parent)  # fallback to extracted
-
-    for sdir in search_dirs:
-        for ext in ("*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp"):
-            for img in sorted(sdir.glob(f"{stem}_img_*{ext[1:]}")):
-                if img not in images:
-                    images.append(img)
-        if images:
-            break  # found in filtered, don't check extracted
+    for ext in ("*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp"):
+        for img in sorted(fdir.glob(f"{stem}_img_*{ext[1:]}")):
+            images.append(img)
 
     return images
 
 
-def _chapter_sort_key(chapter: Dict) -> Tuple[int, int]:
-    """Sort chapters by their number."""
-    name = chapter["chapter"]
-    # extract first number
-    nums = re.findall(r"\d+", name)
-    if nums:
-        return (int(nums[0]), 0)
-    return (999, 0)
+def _image_rel_path(img: Path, output_path: Path) -> str:
+    """Get forward-slash relative path for markdown."""
+    rel = os.path.relpath(img, output_path.parent)
+    return PurePosixPath(Path(rel).as_posix()).as_posix()
 
+
+# ---------------------------------------------------------------------------
+# Keyword index
+# ---------------------------------------------------------------------------
 
 def _build_keyword_index(chapters_text: str) -> str:
-    """Extract a simple keyword index from the handbook text."""
     keywords = {}
-
-    # common course keywords to look for
     kw_patterns = [
         r"Amdahl", r"CGMA", r"CUDA", r"Flynn", r"MPI", r"MSI",
         r"PCAM", r"Warp|线程束", r"共享内存", r"控制分歧", r"前缀和|Prefix Sum|Scan",
@@ -138,10 +251,9 @@ def _build_keyword_index(chapters_text: str) -> str:
     for kw_pat in kw_patterns:
         for i, line in enumerate(lines):
             if re.search(kw_pat, line, re.IGNORECASE):
-                # find the nearest heading above this line
                 heading = ""
                 for j in range(i, -1, -1):
-                    hm = re.match(r"^(#{1,3})\s+(.+)", lines[j])
+                    hm = re.match(r"^(#{1,4})\s+(.+)", lines[j])
                     if hm:
                         heading = hm.group(2).strip()
                         break
@@ -149,7 +261,7 @@ def _build_keyword_index(chapters_text: str) -> str:
                     base_kw = kw_pat.split("|")[0]
                     if base_kw not in keywords:
                         keywords[base_kw] = heading
-                break  # first match is enough per keyword
+                break
 
     if not keywords:
         return ""
@@ -157,52 +269,42 @@ def _build_keyword_index(chapters_text: str) -> str:
     idx_lines = ["\n---\n\n## 关键词索引\n", "| 关键词 | 位置 |", "|--------|------|"]
     for kw, loc in sorted(keywords.items(), key=lambda x: x[0]):
         idx_lines.append(f"| {kw} | {loc} |")
-
     return "\n".join(idx_lines) + "\n"
 
+
+# ---------------------------------------------------------------------------
+# Main compilation
+# ---------------------------------------------------------------------------
 
 def compile_handbook(outline_path: Path, extracted_dir: Path,
                      filtered_dir: Path | None, output_path: Path,
                      course_name: str) -> Dict:
-    """Compile all extracted content into a single handbook."""
     chapters = _parse_outline(outline_path)
 
     if not chapters:
-        print("Warning: no chapters parsed from outline, using all source dirs",
-              file=sys.stderr)
-        # fallback: one chapter per source directory
+        print("Warning: no chapters parsed, using all source dirs", file=sys.stderr)
         for src_dir in sorted(extracted_dir.iterdir()):
             if src_dir.is_dir():
-                chapters.append({
-                    "chapter": src_dir.name,
-                    "sources": [src_dir.name],
-                    "subsections": [],
-                })
+                chapters.append({"chapter": src_dir.name, "sources": [src_dir.name], "subsections": []})
 
-    # sort chapters
     chapters.sort(key=_chapter_sort_key)
-
-    # build handbook
     parts = []
 
     # header
     parts.append(f"# {course_name} — 速查手册\n")
-    parts.append(f"> 本手册包含课程所有资料的完整内容，按章节组织。\n")
-    parts.append("> 每个章节下列出对应的源文件，内容为原文完整保留。\n")
+    parts.append("> 本手册包含课程所有资料的完整内容，按章节组织，原文保留。\n")
 
     # table of contents
     toc = ["## 目录\n"]
     for ch in chapters:
-        ch_name = ch["chapter"]
-        anchor = re.sub(r"[^\w\u4e00-\u9fff]+", "-", ch_name).strip("-").lower()
-        toc.append(f"- [{ch_name}](#{anchor})")
+        anchor = re.sub(r"[^\w一-鿿]+", "-", ch["chapter"]).strip("-").lower()
+        toc.append(f"- [{ch['chapter']}](#{anchor})")
     toc.append("- [关键词索引](#关键词索引)")
     parts.append("\n".join(toc) + "\n")
 
     # chapters
     for ch in chapters:
-        ch_name = ch["chapter"]
-        parts.append(f"\n---\n\n## {ch_name}\n")
+        parts.append(f"\n---\n\n## {ch['chapter']}\n")
 
         for src_name in ch["sources"]:
             src_dir = extracted_dir / src_name
@@ -210,30 +312,28 @@ def compile_handbook(outline_path: Path, extracted_dir: Path,
                 parts.append(f"\n> ⚠️ 源目录未找到: {src_name}\n")
                 continue
 
-            parts.append(f"\n### 📁 {src_name}\n")
+            parts.append(f"\n### {src_name}\n")
 
-            txt_files = _get_text_files(src_dir)
+            txt_files = sorted(src_dir.glob("*.txt"))
             if not txt_files:
                 parts.append("\n> （无文本内容）\n")
                 continue
 
             for txt_file in txt_files:
-                # read text content
                 try:
-                    content = txt_file.read_text(encoding="utf-8").strip()
+                    raw = txt_file.read_text(encoding="utf-8").strip()
                 except Exception:
-                    content = f"[读取失败: {txt_file.name}]"
+                    raw = f"[读取失败: {txt_file.name}]"
 
-                if content:
-                    parts.append(f"\n{content}\n")
+                if raw:
+                    formatted = _format_text(raw)
+                    if formatted:
+                        parts.append(f"\n{formatted}\n")
 
-                # insert corresponding images
-                images = _get_images_for_text(txt_file, filtered_dir, extracted_dir)
+                # insert filtered images only
+                images = _get_images_for_text(txt_file, filtered_dir)
                 for img in images:
-                    # relative path from output .md file to image
-                    rel = os.path.relpath(img, output_path.parent)
-                    # normalize to forward slashes for Markdown
-                    rel = PurePosixPath(Path(rel).as_posix())
+                    rel = _image_rel_path(img, output_path)
                     parts.append(f"\n![{img.stem}]({rel})\n")
 
     # keyword index
@@ -242,7 +342,7 @@ def compile_handbook(outline_path: Path, extracted_dir: Path,
     if index_text:
         parts.append(index_text)
 
-    # write output
+    # write
     output_path.parent.mkdir(parents=True, exist_ok=True)
     handbook = "\n".join(parts)
     output_path.write_text(handbook, encoding="utf-8")
@@ -256,18 +356,12 @@ def compile_handbook(outline_path: Path, extracted_dir: Path,
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Compile all extracted content into a complete handbook")
-    parser.add_argument("--outline", required=True,
-                        help="Path to outline.md")
-    parser.add_argument("--extracted", required=True,
-                        help="01_extracted/ directory")
-    parser.add_argument("--filtered", default=None,
-                        help="01_filtered/ directory (optional, for filtered images)")
-    parser.add_argument("--output", required=True,
-                        help="Output handbook .md path")
-    parser.add_argument("--course-name", default="课程",
-                        help="Course name for the header")
+    parser = argparse.ArgumentParser(description="Compile all extracted content into a complete handbook")
+    parser.add_argument("--outline", required=True)
+    parser.add_argument("--extracted", required=True)
+    parser.add_argument("--filtered", default=None)
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--course-name", default="课程")
     args = parser.parse_args()
 
     result = compile_handbook(
