@@ -157,6 +157,9 @@ def search_citations(query: str, limit: int = 5) -> List[Dict[str, Any]]:
 
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+
     parser = argparse.ArgumentParser(description="Search academic papers for citations")
     parser.add_argument("--query", required=True, help="Search query")
     parser.add_argument("--limit", type=int, default=5, help="Max results")
