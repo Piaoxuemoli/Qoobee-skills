@@ -62,17 +62,23 @@ Agent 会自动匹配对应 skill。也可以明确指定：
 
 实验报告全流程自动化：个人信息本地复用、材料目录一键导入、自动模式、课程模板记忆、证据映射。内置标准大学实验报告模板（10 节结构），导出 DOCX 自动应用学术排版。
 
+**设计亮点：** 个人信息复用 · 课程模板记忆 · 证据映射 · 自动模式
+
 Automate lab reports with reusable profile data, material-folder intake, auto mode, course template memory, and evidence maps. Standard university format (10-section) with academic styling on DOCX export.
 
 ### coursework-helper
 
 通识课 / 选修课作业一键生成：PPT（15 个模板 + 主题系统 + Slidev 可选）、小论文、读书报告、观后感、演讲稿。内置 PPT 引擎，Markdown slide card 直接导出带 speaker notes 的 PPTX。视频链接默认 Bilibili 等国内平台。
 
+**设计亮点：** PPT 引擎（15 模板） · 多格式输出 · 国内适配 · Slidev 可选
+
 Generate deliverables for general education coursework: slides (15 templates + theme system + optional Slidev), short papers, reading reports, reflection essays, and speech scripts. Built-in PPT engine exports styled PPTX with speaker notes from structured Markdown.
 
 ### terminal-screenshot
 
 终端命令输出渲染为逼真 PNG 截图。支持 PowerShell、macOS zsh、Linux/SSH 高保真模板。
+
+**设计亮点：** 高保真渲染 · 三平台模板 · 一键生成
 
 Render terminal command outputs as realistic PNG screenshots. High-fidelity templates for PowerShell, macOS zsh, and Linux/SSH.
 
@@ -82,13 +88,17 @@ Render terminal command outputs as realistic PNG screenshots. High-fidelity temp
 
 将散乱的课程材料（PPT、PDF、文档、笔记）整理成一本带目录、带索引、带关键图片的速查手册。核心原则：不丢失信息——源材料中的全部文字内容完整保留，关键图片自动筛选并放到手册对应位置。输出 Markdown。
 
+**设计亮点：** 零信息丢失 · 关键图片筛选 · 自动索引 · 多源整合
+
 Organize scattered course materials (PPTs, PDFs, documents, notes) into an indexed study handbook with table of contents, key images, and keyword index. Core principle: no information loss — all text content is preserved in full, key images are auto-filtered and placed at the correct position. Outputs Markdown.
 
-### paper-writer
+### paper-writer — [子 Skills 索引](paper-writer/references/skill-catalog.md)
 
-学术小论文写作：自动检索真实文献（Semantic Scholar / arXiv）、反 AI 检测写作风格、字数精确控制（±10%）、IEEE 单栏格式导出 DOCX。内置格式检查（字数、章节、引用一致性、AI 填充词检测）。
+学术论文路由器：不自己实现具体能力，而是按需从 **137 个专业学术 skills** 中加载所需能力，调度子代理执行，最后负责格式检查和 DOCX 导出。
 
-Academic paper writing: automatic real citation search (Semantic Scholar / arXiv), anti-AI-detection writing style, precise word count control (±10%), IEEE single-column DOCX export. Built-in format checker (word count, sections, citation consistency, AI filler detection).
+**设计亮点：** 路由器架构（主 agent 零污染） · 137 个 skills 按需加载 · 格式检查 · DOCX 导出 · 多语种支持 · 署名可选
+
+Academic paper router: loads from 137 professional skills on demand, dispatches sub-agents, handles format checking and DOCX export. Router architecture keeps the main agent context clean.
 
 ---
 

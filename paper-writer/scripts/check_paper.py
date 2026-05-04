@@ -2,7 +2,7 @@
 
 Checks:
   - Word count within target range (±10%)
-  - Required sections present
+  - Required sections present (language-aware)
   - Citation references match bibliography
   - No empty sections
   - Common AI filler phrases detected
@@ -11,6 +11,7 @@ Usage:
     python check_paper.py \
         --input "outputs/paper/04_final/final_paper.md" \
         --target-words 1500 \
+        --lang English \
         --output "outputs/paper/06_qa/check_report.json"
 """
 from __future__ import annotations
@@ -31,6 +32,8 @@ _AI_FILLER = [
 ]
 
 _REQUIRED_SECTIONS_DEFAULT = ["引言", "结语"]
+_REQUIRED_SECTIONS_EN = ["Introduction", "Conclusion"]
+_REQUIRED_SECTIONS_BILINGUAL = ["引言", "结语", "Introduction", "Conclusion"]
 _OPTIONAL_SECTIONS = ["主体分析", "个人理解", "参考文献", "参考", "材料说明"]
 
 
@@ -84,7 +87,8 @@ def _check_ai_filler(md_text: str) -> List[str]:
 
 
 def check_paper(md_path: str, target_words: int = 0,
-                required_sections: List[str] | None = None) -> Dict[str, Any]:
+                required_sections: List[str] | None = None,
+                lang: str = "中文") -> Dict[str, Any]:
     """Run all checks on a paper."""
     md_text = Path(md_path).read_text(encoding="utf-8")
 
@@ -101,9 +105,16 @@ def check_paper(md_path: str, target_words: int = 0,
     else:
         word_status = "no_target"
 
-    # sections
+    # sections - determine required by language
     sections = _find_sections(md_text)
-    required = required_sections or _REQUIRED_SECTIONS_DEFAULT
+    if required_sections:
+        required = required_sections
+    elif lang.lower() in ("english", "en"):
+        required = _REQUIRED_SECTIONS_EN
+    elif lang.lower() in ("双语", "bilingual"):
+        required = _REQUIRED_SECTIONS_BILINGUAL
+    else:
+        required = _REQUIRED_SECTIONS_DEFAULT
     sections_missing = []
     for req in required:
         if not any(req in s for s in sections):
@@ -157,10 +168,12 @@ def main():
     parser = argparse.ArgumentParser(description="Check paper format and content")
     parser.add_argument("--input", required=True, help="Input .md file")
     parser.add_argument("--target-words", type=int, default=0, help="Target word count")
+    parser.add_argument("--lang", default="中文",
+                        help="Paper language: English / 中文 / 双语")
     parser.add_argument("--output", required=True, help="Output JSON report path")
     args = parser.parse_args()
 
-    result = check_paper(args.input, args.target_words)
+    result = check_paper(args.input, args.target_words, lang=args.lang)
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
