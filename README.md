@@ -8,18 +8,31 @@ A collection of Claude Code / Cursor Skills that automate college coursework —
 
 ## 快速配置 / Quick Start
 
-把本仓库的 skill 目录复制或 clone 到你的 Agent skills 路径：
+在你的**项目根目录**下执行以下命令，将 skills 安装到当前项目：
 
-| 环境 | Skills 路径 |
-|------|------------|
-| Claude Code | `.claude/commands/` （项目级）或 `~/.claude/commands/` （全局） |
-| Cursor | `.cursor/skills/` （项目级）或 `~/.cursor/skills/` （全局） |
-| 其他 | 参考对应平台的 custom instructions / skills 文档 |
+| 环境 | 安装路径 |
+|------|---------|
+| Claude Code | `<项目根目录>/.claude/skills/` |
+| Cursor | `<项目根目录>/.cursor/skills/` |
+
+### Claude Code
 
 ```bash
-# 示例：clone 到项目的 .claude/commands/
+# 在你的项目根目录下执行
 git clone https://github.com/Piaoxuemoli/Auto-college.git /tmp/auto-college
-cp -r /tmp/auto-college/coursework-helper /tmp/auto-college/lab-report /tmp/auto-college/terminal-screenshot /tmp/auto-college/study-index .claude/commands/
+mkdir -p .claude/skills
+cp -r /tmp/auto-college/coursework-helper /tmp/auto-college/lab-report /tmp/auto-college/terminal-screenshot /tmp/auto-college/study-index .claude/skills/
+rm -rf /tmp/auto-college
+```
+
+### Cursor
+
+```bash
+# 在你的项目根目录下执行
+git clone https://github.com/Piaoxuemoli/Auto-college.git /tmp/auto-college
+mkdir -p .cursor/skills
+cp -r /tmp/auto-college/coursework-helper /tmp/auto-college/lab-report /tmp/auto-college/terminal-screenshot /tmp/auto-college/study-index .cursor/skills/
+rm -rf /tmp/auto-college
 ```
 
 配置完成后，直接在对话中描述任务即可：
@@ -72,9 +85,9 @@ Render terminal command outputs as realistic PNG screenshots. High-fidelity temp
 
 ### study-index — [详细文档](docs/study-index.md)
 
-将散乱的课程材料（PPT、PDF、文档、笔记）整理成一本带目录、带索引、带例题、带关键图片的速查手册。核心原则：不丢失信息——源材料中的关键图片、公式、图表必须提取并放到手册对应位置。输出 Markdown + PDF（可打印）。
+将散乱的课程材料（PPT、PDF、文档、笔记）整理成一本带目录、带索引、带关键图片的速查手册。核心原则：不丢失信息——源材料中的全部文字内容完整保留，关键图片自动筛选并放到手册对应位置。输出 Markdown。
 
-Organize scattered course materials (PPTs, PDFs, documents, notes) into an indexed study handbook with table of contents, key images, formulas, and example problems. Core principle: no information loss — key images and diagrams are extracted and placed at the correct position. Outputs Markdown + PDF (printable).
+Organize scattered course materials (PPTs, PDFs, documents, notes) into an indexed study handbook with table of contents, key images, and keyword index. Core principle: no information loss — all text content is preserved in full, key images are auto-filtered and placed at the correct position. Outputs Markdown.
 
 ---
 
