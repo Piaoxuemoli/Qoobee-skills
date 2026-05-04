@@ -37,7 +37,7 @@ Agent 会自动 clone、复制、配置。
 ```
 
 ```text
-帮我把这门通识课作业整理成 PPT 和小论文
+帮我写一篇关于分布式计算的1500字小论文，IEEE格式
 ```
 
 ```text
@@ -83,6 +83,12 @@ Render terminal command outputs as realistic PNG screenshots. High-fidelity temp
 将散乱的课程材料（PPT、PDF、文档、笔记）整理成一本带目录、带索引、带关键图片的速查手册。核心原则：不丢失信息——源材料中的全部文字内容完整保留，关键图片自动筛选并放到手册对应位置。输出 Markdown。
 
 Organize scattered course materials (PPTs, PDFs, documents, notes) into an indexed study handbook with table of contents, key images, and keyword index. Core principle: no information loss — all text content is preserved in full, key images are auto-filtered and placed at the correct position. Outputs Markdown.
+
+### paper-writer
+
+学术小论文写作：自动检索真实文献（Semantic Scholar / arXiv）、反 AI 检测写作风格、字数精确控制（±10%）、IEEE 单栏格式导出 DOCX。内置格式检查（字数、章节、引用一致性、AI 填充词检测）。
+
+Academic paper writing: automatic real citation search (Semantic Scholar / arXiv), anti-AI-detection writing style, precise word count control (±10%), IEEE single-column DOCX export. Built-in format checker (word count, sections, citation consistency, AI filler detection).
 
 ---
 
