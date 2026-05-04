@@ -9,42 +9,68 @@
 
 ## 工作流程
 
-### Step 1: 发现 Skills
+### Step 1: 加载核心 Skills（无条件）
 
-读取 `paper-writer/references/skill-catalog.md`，了解所有 534 个可用 skills。
+这 10 个 skills 每次都加载，不需要判断：
 
-根据你的需求选择合适的 skills。常见组合：
+1. `paper-writer/skills/scientific-writing/SKILL.md`
+2. `paper-writer/skills/citation-management/SKILL.md`
+3. `paper-writer/skills/literature-review/SKILL.md`
+4. `paper-writer/skills/paper-lookup/SKILL.md`
+5. `paper-writer/skills/peer-review/SKILL.md`
+6. `paper-writer/skills/compiler/SKILL.md`
+7. `paper-writer/skills/venue-templates/SKILL.md`
+8. `paper-writer/skills/database-lookup/SKILL.md`
+9. `paper-writer/skills/research-lookup/SKILL.md`
+10. `paper-writer/skills/scientific-brainstorming/SKILL.md`
 
-| 任务 | 推荐 skills |
-|------|------------|
-| 学术论文 | scientific-writing, paper-lookup, citation-management |
-| 文献综述 | literature-review, paper-lookup, parallel-web |
-| 论文审阅 | peer-review, scientific-critical-thinking |
-| 图表生成 | scientific-schematics, scientific-visualization, matplotlib |
-| 数据库查询 | database-lookup, paper-lookup |
-| 格式转换 | pdf, docx, pptx, xlsx |
-| 研究构思 | hypothesis-generation, scientific-brainstorming |
+读取这 10 个 SKILL.md。它们提供：学术写作方法、文献检索、引用管理、同行评审、模板格式等基础能力。
 
-### Step 2: 加载 Skills
+### Step 2: 匹配领域 Skills
 
-对选中的每个 skill，读取其 SKILL.md：
+分析论文主题，与下表关键词匹配。一个论文可以匹配多个领域。
 
-```
-paper-writer/skills/<skill-name>/SKILL.md
-```
+| 领域 | 关键词 | 数量 |
+|------|--------|------|
+| ML/AI | machine learning, deep learning, neural network, transformer, LLM, NLP, computer vision, reinforcement learning, fine-tuning, training, inference, AI, GPT, diffusion, PyTorch, RAG, agent | 87 |
+| Biology | biology, bioinformatics, genomics, proteomics, RNA, DNA, gene, protein, cell, single-cell, phylogenetics, sequence, CRISPR, metabolomics | 35 |
+| Chemistry | chemistry, drug discovery, molecule, molecular, SMILES, docking, ADMET, toxicity, compound, mass spectrometry | 14 |
+| Physics | physics, quantum, simulation, fluid dynamics, astrophysics, astronomy, quantum computing | 7 |
+| Medicine | medical, clinical, healthcare, pathology, radiology, DICOM, treatment, diagnosis, EHR, patient | 10 |
+| Earth Science | earth science, geospatial, GIS, remote sensing, climate, satellite, geography | 2 |
+| Neuroscience | neuroscience, brain, EEG, ECG, neural recording, electrophysiology, biosignal | 2 |
+| Finance | finance, economics, market, fiscal, investment, financial analysis | 2 |
+| Writing | systems paper, grant, NSF, NIH, hypothesis, scholarly evaluation, research methodology | 8 |
 
-有些 skill 还有 `references/` 子目录包含详细 API 文档，按需读取。
+匹配后，读取 `paper-writer/references/skill-catalog.md` 中对应领域的完整 skill 列表，然后加载这些 SKILL.md。
 
-### Step 3: 执行
+如果主题不明确匹配任何领域，跳过此步。
 
-按照加载的 skill 指引完成具体工作：
+### Step 3: 选取工具 Skills
 
-1. **文献检索** — 使用 paper-lookup 或 bgpt-paper-search 的 API 搜索文献
-2. **创建大纲** — 在 `<output_dir>/02_outline/outline.md` 写大纲
-3. **撰写论文** — 在 `<output_dir>/04_final/final_paper.md` 写完整论文
-4. **生成图表** — 如有 scientific-schematics skill，按指引生成
+根据具体任务需求，判断是否需要以下工具类 skills：
 
-### Step 4: 检查
+| 判断条件 | 加载的 skills |
+|---------|--------------|
+| 需要图表/示意图/海报？ | scientific-visualization, matplotlib, scientific-schematics, academic-plotting, seaborn |
+| 需要数据分析/统计？ | statistical-analysis, exploratory-data-analysis, scikit-learn, polars |
+| 需要格式转换？ | pdf, docx, pptx, xlsx, markitdown |
+| 需要自主研究/假设生成？ | 0-autoresearch-skill, hypogenic, what-if-oracle |
+| 需要演示/海报？ | scientific-slides, pptx-posters, latex-posters |
+
+只加载直接相关的工具，不要全部加载。
+
+### Step 4: 执行
+
+用已加载的 skills 完成论文：
+
+1. **文献检索** — 使用 paper-lookup、database-lookup 等搜索文献
+2. **创建大纲** — 写入 `<output_dir>/02_outline/outline.md`
+3. **撰写论文** — 写入 `<output_dir>/04_final/final_paper.md`
+4. **生成图表** — 如有 scientific-schematics 等 skill，按指引生成
+5. **格式化引用** — 使用 citation-management skill
+
+### Step 5: 检查
 
 ```bash
 python paper-writer/scripts/check_paper.py \
@@ -56,7 +82,7 @@ python paper-writer/scripts/check_paper.py \
 
 如果检查发现问题，修复后重新检查。
 
-### Step 5: 导出
+### Step 6: 导出
 
 ```bash
 python paper-writer/scripts/export_docx.py \

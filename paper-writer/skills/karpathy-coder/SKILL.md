@@ -1,1 +1,0 @@
-../../../engineering/karpathy-coder/SKILL.md
