@@ -70,20 +70,19 @@ python paper-writer/scripts/init_output_dir.py "<paper_name>" \
 2. 根据需求选择合适的 skills
 3. 读取选中 skills 的 SKILL.md（路径在 catalog 中）
 4. 按照 skill 指引执行（文献检索、写作、图表生成等）
-5. 完成后调用检查和导出脚本
+5. 完成后调用检查脚本，使用 docx skill 导出 DOCX
 
 ## 检查与导出
 ```bash
+# 格式检查
 python paper-writer/scripts/check_paper.py \
     --input "paper-writer/outputs/<paper_name>/04_final/final_paper.md" \
     --target-words <target_words> \
     --lang <lang> \
     --output "paper-writer/outputs/<paper_name>/06_qa/check_report.json"
-
-python paper-writer/scripts/export_docx.py \
-    --input "paper-writer/outputs/<paper_name>/04_final/final_paper.md" \
-    --output "paper-writer/outputs/<paper_name>/05_exports/final_paper.docx"
 ```
+
+DOCX 导出使用 docx skill（`paper-writer/skills/docx/SKILL.md`），由子代理按指引用 docx-js 生成。
 ```
 
 ### Step 4: 报告结果

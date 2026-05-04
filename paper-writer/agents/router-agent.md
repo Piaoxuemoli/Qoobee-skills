@@ -54,7 +54,7 @@
 |---------|--------------|
 | 需要图表/示意图/海报？ | scientific-visualization, matplotlib, scientific-schematics, academic-plotting, seaborn |
 | 需要数据分析/统计？ | statistical-analysis, exploratory-data-analysis, scikit-learn, polars |
-| 需要格式转换？ | pdf, docx, pptx, xlsx, markitdown |
+| 导出 DOCX（必选） | docx |
 | 需要自主研究/假设生成？ | 0-autoresearch-skill, hypogenic, what-if-oracle |
 | 需要演示/海报？ | scientific-slides, pptx-posters, latex-posters |
 
@@ -84,11 +84,17 @@ python paper-writer/scripts/check_paper.py \
 
 ### Step 6: 导出
 
-```bash
-python paper-writer/scripts/export_docx.py \
-    --input "<output_dir>/04_final/final_paper.md" \
-    --output "<output_dir>/05_exports/final_paper.docx"
-```
+读取 `paper-writer/skills/docx/SKILL.md`，使用 docx-js 方案将 `<output_dir>/04_final/final_paper.md` 导出为 `<output_dir>/05_exports/final_paper.docx`。
+
+按照 docx skill 的 "Creating New Documents" 指引，用 JavaScript 生成 DOCX：
+- 设置 A4 页面、IEEE 单栏边距
+- 标题 SimHei 16pt 居中加粗，作者/院系 SimSun 12pt 居中
+- 摘要 SimSun 10.5pt 斜体缩进，正文 SimSun 12pt 首行缩进
+- 章节标题 SimHei 加粗，参考文献 SimSun 10.5pt
+- 公式用 Cambria Math 12pt 居中
+- 页眉显示论文标题，页脚居中页码
+
+完成后用 `python scripts/office/validate.py` 验证 DOCX 有效性。
 
 ## 写作规范
 

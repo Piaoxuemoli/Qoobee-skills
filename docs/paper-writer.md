@@ -26,7 +26,7 @@ Collect needs → Init dir → Spawn sub-agent → Tiered skill retrieval → Ex
 3. **工具层（59 个）** — 按需选取：可视化、数据统计、文档处理、研究自动化等 5 个类别
 4. 执行文献检索、写作、图表生成等具体工作
 5. 调用 `check_paper.py` 检查格式
-6. 调用 `export_docx.py` 导出
+6. 使用 `docx` skill 导出 DOCX（docx-js 方案）
 
 这种设计保证主 agent 上下文不被 skill 内容污染。
 
@@ -100,10 +100,8 @@ python paper-writer/scripts/check_paper.py \
     --lang English \
     --output "<output_dir>/06_qa/check_report.json"
 
-# DOCX 导出
-python paper-writer/scripts/export_docx.py \
-    --input "<output_dir>/04_final/final_paper.md" \
-    --output "<output_dir>/05_exports/final_paper.docx"
+# DOCX 导出 — 使用 docx skill（paper-writer/skills/docx/SKILL.md）
+# 子代理按 docx-js 指引生成 DOCX，不再依赖 export_docx.py
 ```
 
 检查项：
@@ -125,8 +123,7 @@ paper-writer/
 │   └── skill-catalog.md            # 233 个 skills 三层分类索引
 ├── scripts/
 │   ├── init_output_dir.py          # 输出目录初始化
-│   ├── check_paper.py              # 格式检查
-│   └── export_docx.py              # DOCX 导出
+│   └── check_paper.py              # 格式检查
 ├── templates/
 │   └── ieee_single.md              # IEEE 单栏模板
 └── outputs/                        # 用户输出（gitignored）
