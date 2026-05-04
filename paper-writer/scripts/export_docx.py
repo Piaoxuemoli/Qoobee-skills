@@ -142,6 +142,50 @@ def _add_reference(doc, text):
     _set_paragraph_spacing(p, after=Pt(2), line_spacing=1.25)
 
 
+def _add_equation(doc, formula):
+    """Add display equation (Cambria Math 12pt, centered, no indent)."""
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = p.add_run(formula)
+    _set_font(run, "Cambria Math", "Cambria Math", Pt(12), italic=True)
+    _set_paragraph_spacing(p, before=Pt(6), after=Pt(6), line_spacing=1.5)
+
+
+def _add_figure(doc, alt_text, image_path):
+    """Add figure with image and caption.
+
+    alt_text: caption text (e.g. "图1: 游戏AI发展时间线")
+    image_path: relative or absolute path to the image file
+    """
+    from pathlib import Path as P
+
+    img_path = P(image_path)
+    if not img_path.exists():
+        # skip missing images silently
+        p = doc.add_paragraph()
+        run = p.add_run(f"[图片缺失: {alt_text}]")
+        _set_font(run, "SimSun", "Times New Roman", Pt(10.5), italic=True)
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        return
+
+    # calculate available width: page width - left margin - right margin
+    # A4=21cm, margins 3.17cm each side => 14.66cm available
+    available_width = Cm(14.66)
+
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = p.add_run()
+    run.add_picture(str(img_path), width=available_width)
+    _set_paragraph_spacing(p, before=Pt(12), after=Pt(3))
+
+    # caption below the figure
+    cap = doc.add_paragraph()
+    cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run_cap = cap.add_run(alt_text)
+    _set_font(run_cap, "SimSun", "Times New Roman", Pt(10.5))
+    _set_paragraph_spacing(cap, after=Pt(12), line_spacing=1.25)
+
+
 def _setup_page(doc):
     """Set A4 page with IEEE-style margins."""
     section = doc.sections[0]
@@ -192,6 +236,8 @@ def _parse_markdown(md_text: str) -> list:
       ("h2", text)          -- ### heading
       ("abstract", text)    -- **摘要：** content
       ("keywords", text)    -- **关键词：** content
+      ("equation", formula) -- $$...$$ display equation
+      ("figure", (alt, path)) -- ![alt](path) figure
       ("body", text)        -- regular paragraph
       ("reference", text)   -- [N] citation
       ("blank", "")         -- empty line
@@ -237,6 +283,18 @@ def _parse_markdown(md_text: str) -> list:
             blocks.append(("keywords", text))
             continue
 
+        # display equation: $$...$$
+        if stripped.startswith("$$") and stripped.endswith("$$") and len(stripped) > 4:
+            formula = stripped[2:-2].strip()
+            blocks.append(("equation", formula))
+            continue
+
+        # figure: ![alt](path)
+        fig_match = re.match(r"^!\[(.+?)\]\((.+?)\)", stripped)
+        if fig_match:
+            blocks.append(("figure", (fig_match.group(1), fig_match.group(2))))
+            continue
+
         # reference line: [N] ...
         if re.match(r"^\[\d+\]", stripped):
             blocks.append(("reference", stripped))
@@ -254,7 +312,9 @@ def _parse_markdown(md_text: str) -> list:
 
 def export_docx(md_path: str, docx_path: str) -> str:
     """Convert Markdown paper to DOCX with IEEE single-column formatting."""
-    md_text = Path(md_path).read_text(encoding="utf-8")
+    md_file = Path(md_path)
+    md_text = md_file.read_text(encoding="utf-8")
+    md_dir = md_file.parent  # for resolving relative image paths
     blocks = _parse_markdown(md_text)
 
     doc = Document()
@@ -290,6 +350,13 @@ def export_docx(md_path: str, docx_path: str) -> str:
             _add_abstract(doc, btext)
         elif btype == "keywords":
             _add_keywords(doc, btext)
+        elif btype == "equation":
+            _add_equation(doc, btext)
+        elif btype == "figure":
+            alt_text, rel_path = btext
+            # resolve relative to md file directory
+            img_path = (md_dir / rel_path).resolve()
+            _add_figure(doc, alt_text, str(img_path))
         elif btype == "reference":
             _add_reference(doc, btext)
         elif btype == "body":

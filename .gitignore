@@ -21,4 +21,11 @@ study-index/outputs/*
 !study-index/outputs/.gitkeep
 
 # External reference code (third-party repos cloned for inspiration/reuse)
-references/
+/references/
+
+# Temporary clone directory for external repos
+rf/
+
+# Paper-writer outputs (user-generated, not skill code)
+paper-writer/outputs/*
+!paper-writer/outputs/.gitkeep
