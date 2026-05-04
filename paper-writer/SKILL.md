@@ -1,7 +1,7 @@
 ---
 name: paper-writer
 description: >
-  学术论文路由器：收集需求、起子代理自动检索并加载 137 个专业 skills、
+  学术论文路由器：收集需求、起子代理自动检索并加载 534 个专业 skills、
   调度执行、格式检查、DOCX 导出。主 agent 不加载任何 skill 内容。
   Use when the user mentions 小论文, 课程论文, IEEE, 论文写作, 学术论文,
   文献综述, literature review, paper writing, scientific paper, 研究报告.

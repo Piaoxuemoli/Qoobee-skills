@@ -1,9 +1,9 @@
 # paper-writer
 
-学术论文路由器：收集需求、起子代理自动检索并加载 137 个专业 skills、调度执行、格式检查、DOCX 导出。主 agent 不加载任何 skill 内容。
+学术论文路由器：收集需求、起子代理自动检索并加载 534 个专业 skills、调度执行、格式检查、DOCX 导出。主 agent 不加载任何 skill 内容。
 
 Academic paper router: collects requirements, spawns a sub-agent that self-discovers and
-loads from 137 professional skills on demand, executes the workflow, checks format, and
+loads from 534 professional skills on demand, executes the workflow, checks format, and
 exports DOCX. The main agent never loads any skill content.
 
 ## 工作流 / Workflow

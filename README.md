@@ -102,11 +102,11 @@ Organize scattered course materials into an indexed study handbook. Core princip
 
 ### [paper-writer](docs/paper-writer.md)
 
-学术论文路由器：不自己实现具体能力，而是按需从 **137 个专业学术 skills** 中加载所需能力，调度子代理执行，最后负责格式检查和 DOCX 导出。主 agent 只做路由，子代理自发现 skills 并全权执行。
+学术论文路由器：不自己实现具体能力，而是按需从 **534 个专业 skills** 中加载所需能力，调度子代理执行，最后负责格式检查和 DOCX 导出。主 agent 只做路由，子代理自发现 skills 并全权执行。
 
-**设计亮点：** 路由器架构（主 agent 零污染） · 137 个 skills 按需加载 · 格式检查 · DOCX 导出 · 多语种支持 · 署名可选
+**设计亮点：** 路由器架构（主 agent 零污染） · 534 个 skills 按需加载 · 格式检查 · DOCX 导出 · 多语种支持 · 署名可选
 
-Academic paper router: loads from 137 professional skills on demand, dispatches sub-agents, handles format checking and DOCX export. Router architecture keeps the main agent context clean.
+Academic paper router: loads from 534 professional skills on demand, dispatches sub-agents, handles format checking and DOCX export. Router architecture keeps the main agent context clean.
 
 ---
 

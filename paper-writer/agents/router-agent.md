@@ -11,7 +11,7 @@
 
 ### Step 1: 发现 Skills
 
-读取 `paper-writer/references/skill-catalog.md`，了解所有 137 个可用 skills。
+读取 `paper-writer/references/skill-catalog.md`，了解所有 534 个可用 skills。
 
 根据你的需求选择合适的 skills。常见组合：
 
