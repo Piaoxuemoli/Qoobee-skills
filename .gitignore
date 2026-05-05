@@ -2,6 +2,9 @@ __pycache__/
 *.pyc
 .DS_Store
 
+# Development-only rules (not for end users)
+.claude/rules/
+
 # Lab-report outputs (user-generated, not skill code)
 lab-report/outputs/*
 !lab-report/outputs/.gitkeep
