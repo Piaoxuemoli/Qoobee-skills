@@ -1,15 +1,15 @@
 ---
 name: paper-writer
 description: >
-  学术论文路由器：收集需求、起子代理自动检索并加载 233 个专业 skills、
-  调度执行、格式检查、DOCX 导出。主 agent 不加载任何 skill 内容。
+  学术论文路由器：收集需求、起 router-agent 调度 233 个专业 skills、
+  三代理流水线（调度→写作→导出）。主 agent 不加载任何 skill 内容。
   Use when the user mentions 小论文, 课程论文, IEEE, 论文写作, 学术论文,
   文献综述, literature review, paper writing, scientific paper, 研究报告.
 ---
 
 # Paper Writer Router
 
-薄路由器：只收集用户需求，起子代理完成全部工作。主 agent 不读任何 skill 内容。
+三代理流水线：主 agent 收集需求 → router-agent 匹配 skills → writer-agent 写论文 → export-agent 检查导出。
 
 ## 工作流程
 
@@ -43,14 +43,27 @@ python paper-writer/scripts/init_output_dir.py "<paper_name>" \
     --author "<author>"
 ```
 
-### Step 3: 起子代理
+### Step 3: 起 router-agent
 
-使用 Agent 工具创建子代理，**只传入以下信息**，不传 skill 内容：
+使用 Agent 工具创建 router-agent，传入需求参数和输出目录。
+
+router-agent 会：
+1. 读 skill-catalog.md 匹配领域 skills
+2. 选取工具 skills
+3. 组装 skill 路径列表
+4. 起 writer-agent（带 skill 列表）
+
+writer-agent 会：
+1. 按列表加载 skills
+2. 文献检索 → 大纲 → 撰写论文
+3. 起 export-agent（检查 + DOCX 导出）
 
 ```
-你是论文写作子代理。请按以下要求完成任务：
+起 router-agent，传入以下信息：
 
-## 需求
+你是论文写作调度器。请按以下要求调度论文写作任务。
+
+## 需求参数
 - 主题: <topic>
 - 论文类型: <paper_type>
 - 语种: <lang>
@@ -63,39 +76,40 @@ python paper-writer/scripts/init_output_dir.py "<paper_name>" \
 - 其他: <extra>
 
 ## 输出目录
-<paper_name> 输出到 paper-writer/outputs/<paper_name>/
+paper-writer/outputs/<paper_name>/
 
-## 你需要做的
-1. 读 paper-writer/references/skill-catalog.md 了解可用 skills
-2. 根据需求选择合适的 skills
-3. 读取选中 skills 的 SKILL.md（路径在 catalog 中）
-4. 按照 skill 指引执行（文献检索、写作、图表生成等）
-5. 完成后调用检查脚本，使用 docx skill 导出 DOCX
-
-## 检查与导出
-```bash
-# 格式检查
-python paper-writer/scripts/check_paper.py \
-    --input "paper-writer/outputs/<paper_name>/04_final/final_paper.md" \
-    --target-words <target_words> \
-    --lang <lang> \
-    --output "paper-writer/outputs/<paper_name>/06_qa/check_report.json"
-```
-
-DOCX 导出使用 docx skill（`paper-writer/skills/docx/SKILL.md`），由子代理按指引用 docx-js 生成。
+请读取 paper-writer/agents/router-agent.md 了解你的工作流程。
 ```
 
 ### Step 4: 报告结果
 
-子代理完成后，向用户报告：
+全部子代理完成后，向用户报告：
 - 输出文件位置
 - 字数 / 文献数等统计数据
 - 检查结果（是否有 warning）
 - 如果有 deadline，提醒用户
 
+## 三代理架构
+
+```
+主 agent (SKILL.md)
+  │  收集需求 + 初始化目录
+  │
+  └─→ router-agent（调度器）
+        │  读 catalog → 匹配领域 → 选工具 → 组装 skill 列表
+        │
+        └─→ writer-agent（写手）
+              │  加载 skills → 文献检索 → 大纲 → 撰写 → 引用
+              │
+              └─→ export-agent（导出员）
+                    check_paper.py → 修复 → docx skill 导出 DOCX
+```
+
 ## 重要原则
 
 - **主 agent 不读 skill-catalog.md**
 - **主 agent 不读任何 skills/<name>/SKILL.md**
-- **主 agent 只负责收集需求 + 起子代理 + 报告结果**
-- **子代理全权负责 skill 发现、加载、执行、检查、导出**
+- **主 agent 只负责收集需求 + 起 router-agent + 报告结果**
+- **router-agent 只做匹配调度，不读 skill 内容**
+- **writer-agent 按需加载 skills，只写论文**
+- **export-agent 独立负责检查和导出**

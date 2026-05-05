@@ -1,34 +1,57 @@
 # paper-writer
 
-学术论文路由器：收集需求、起子代理自动检索并加载 233 个专业 skills、调度执行、格式检查、DOCX 导出。主 agent 不加载任何 skill 内容。
+学术论文三代理流水线：收集需求 → router-agent 匹配 skills → writer-agent 写论文 → export-agent 检查导出。每个代理职责单一，互不污染。
 
-Academic paper router: collects requirements, spawns a sub-agent that self-discovers and
-loads from 233 professional skills on demand, executes the workflow, checks format, and
-exports DOCX. The main agent never loads any skill content.
+Academic paper three-agent pipeline: collect needs → router-agent matches skills → writer-agent writes paper → export-agent checks and exports. Each agent has a single responsibility.
 
 ## 工作流 / Workflow
 
 ```text
-收集需求 → 初始化目录 → 起子代理 → 三层检索 skills → 执行 → 检查 → 导出
-Collect needs → Init dir → Spawn sub-agent → Tiered skill retrieval → Execute → Check → Export
+收集需求 → 初始化目录 → router-agent 匹配 skills → writer-agent 写论文 → export-agent 检查导出
+Collect needs → Init dir → Router matches skills → Writer writes → Exporter checks & exports
 ```
 
-## 架构：Design B 路由器 / Router Architecture
+## 架构：三代理流水线 / Three-Agent Pipeline
+
+```
+主 agent (SKILL.md)
+  │  收集需求 + 初始化目录
+  │
+  └─→ router-agent（调度器）
+        │  读 catalog（387行）→ 匹配领域 → 选工具 → 组装 skill 列表
+        │
+        └─→ writer-agent（写手）
+              │  按列表加载 skills → 文献检索 → 大纲 → 撰写 → 引用
+              │
+              └─→ export-agent（导出员）
+                    check_paper.py → 修复 → docx skill 导出 DOCX
+```
 
 **主 agent（SKILL.md）** 只做三件事：
 1. 收集用户需求参数（主题、字数、语种、署名、格式等）
 2. 初始化输出目录
-3. 起一个子代理，把需求打包传给它
+3. 起 router-agent，把需求打包传给它
 
-**子代理（router-agent.md）** 全权负责分层检索：
-1. **核心层（10 个）** — 无条件加载：scientific-writing, citation-management, paper-lookup 等
-2. **领域层（164 个）** — 按主题关键词匹配：ML/AI、Biology、Chemistry、Physics 等 9 个领域
-3. **工具层（59 个）** — 按需选取：可视化、数据统计、文档处理、研究自动化等 5 个类别
-4. 执行文献检索、写作、图表生成等具体工作
-5. 调用 `check_paper.py` 检查格式
-6. 使用 `docx` skill 导出 DOCX（docx-js 方案）
+**router-agent（调度器）** 只做匹配调度：
+1. 读 skill-catalog.md（387 行）
+2. 按关键词匹配领域 skills
+3. 按需选取工具 skills
+4. 组装 skill 路径列表，起 writer-agent
+5. **不读任何 SKILL.md 内容**
 
-这种设计保证主 agent 上下文不被 skill 内容污染。
+**writer-agent（写手）** 按需加载 skills：
+1. 按 router 给出的列表加载 skills（不自行扩展）
+2. 文献检索、写大纲、写论文、格式化引用
+3. 起 export-agent
+4. **只加载需要的 skills，避免 context 过载**
+
+**export-agent（导出员）** 独立检查导出：
+1. 运行 check_paper.py 检查格式
+2. 修复问题
+3. 用 docx skill 导出 DOCX
+4. **失败可单独重试，不影响论文内容**
+
+这种设计保证：主 agent 零污染，router 不加载 skill 内容，writer 按需加载，export 独立隔离。
 
 ## 需求参数 / Parameters
 
@@ -115,10 +138,12 @@ python paper-writer/scripts/check_paper.py \
 
 ```
 paper-writer/
-├── SKILL.md                        # 主路由器（收集需求 + 起子代理）
+├── SKILL.md                        # 主入口（收集需求 + 起 router-agent）
 ├── README.md                       # 本文件 / This file
 ├── agents/
-│   └── router-agent.md             # 子代理指令（自发现 + 执行）
+│   ├── router-agent.md             # 调度器（匹配 skills + 组装列表）
+│   ├── writer-agent.md             # 写手（加载 skills + 写论文）
+│   └── export-agent.md             # 导出员（检查 + DOCX 导出）
 ├── references/
 │   └── skill-catalog.md            # 233 个 skills 三层分类索引
 ├── scripts/
