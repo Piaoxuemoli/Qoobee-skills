@@ -20,14 +20,10 @@ curl -fsSL https://raw.githubusercontent.com/Piaoxuemoli/Auto-college/master/set
 
 ### 方式二：让 Agent 帮你装
 
-打开 Claude Code 或 Cursor，把下面这段话发给 Agent：
+对你的 AI Agent 说：
 
 ```text
-帮我安装 Auto-college skills，步骤如下：
-1. git clone --depth 1 https://github.com/Piaoxuemoli/Auto-college.git /tmp/auto-college
-2. 把 /tmp/auto-college/skills/ 下的 5 个目录（coursework-helper、lab-report、paper-writer、terminal-screenshot、study-index）复制到当前项目的 .claude/skills/ 目录
-3. 删除 /tmp/auto-college
-4. 确认 .claude/skills/ 下有这 5 个目录
+帮我从 https://github.com/Piaoxuemoli/Auto-college 安装 skills 到当前项目
 ```
 
 ### 安装后使用
