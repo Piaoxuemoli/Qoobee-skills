@@ -65,6 +65,16 @@
 **字数**
 - 正文字数在目标的 ±10% 范围内（不含参考文献）
 
+**公式**
+- 所有数学公式必须用 LaTeX 语法书写
+- 行内公式用单个 `$` 包裹：`$V^\pi(s)$`、`$\gamma \in [0,1)$`
+- 独立公式块用双 `$$` 包裹：
+  ```latex
+  $$V^\pi(s) = E\left[\sum_{t=0}^{\infty} \gamma^t R(s_t, a_t) \mid s_0 = s, \pi\right]$$
+  ```
+- 禁止使用 Unicode 数学符号（Σ∞γθπ∇α∈）混搭 ASCII 记法（V^π、_{t=0}）
+- 常见 LaTeX 命令：`\pi` `\gamma` `\theta` `\alpha` `\infty` `\sum` `\prod` `\int` `\nabla` `\partial` `\in` `\leq` `\geq` `^\text{superscript}` `_{\text{subscript}}`
+
 ### Step 5: 生成图表（如有需要）
 
 如有 scientific-schematics、matplotlib 等 skill，按指引为论文生成图表。

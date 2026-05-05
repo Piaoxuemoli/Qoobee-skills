@@ -41,7 +41,24 @@ python paper-writer/scripts/check_paper.py \
 
 读取 `paper-writer/skills/docx/SKILL.md`，使用 docx-js 方案将 Markdown 论文导出为 DOCX。
 
-格式要求：
+**预处理 LaTeX 公式**
+
+论文中的公式用 LaTeX 语法（`$...$` 行内，`$$...$$` 独立块）。docx-js 不直接支持 LaTeX，需要先转换：
+
+1. 解析 markdown，提取所有 `$...$` 和 `$$...$$` 中的 LaTeX
+2. 将 LaTeX 转换为 Unicode 数学符号：
+   - `\pi` → π, `\gamma` → γ, `\theta` → θ, `\alpha` → α, `\infty` → ∞
+   - `\sum` → Σ, `\prod` → Π, `\int` → ∫, `\nabla` → ∇, `\partial` → ∂
+   - `\in` → ∈, `\leq` → ≤, `\geq` → ≥, `\times` → ×, `\pm` → ±
+   - `\left[` → [, `\right]` → ], `\left(` → (, `\right)` → )
+   - `^{xxx}` → 上标（用 Unicode 上标字符或保留 ^xxx）
+   - `_{xxx}` → 下标（用 Unicode 下标字符或保留 _xxx）
+   - `\text{xxx}` → xxx（纯文本）
+   - `\mid` → |, `\cdot` → ·
+3. 独立公式块（`$$...$$`）用 Cambria Math 12pt 居中显示
+4. 行内公式（`$...$`）嵌入正文段落
+
+**格式要求**
 - A4 页面，边距：上下 2.54cm，左右 3.17cm
 - 标题：SimHei 16pt 居中加粗
 - 作者/院系：SimSun 12pt 居中
