@@ -12,7 +12,7 @@ outputs.
 python terminal-screenshot/scripts/html_to_png.py example.html --name git-fetch-powershell
 ```
 
-![terminal-screenshot example](../terminal-screenshot/example.png)
+![terminal-screenshot example](../skills/terminal-screenshot/example.png)
 
 > Windows Terminal PowerShell 7 风格，通过 Playwright 生成。内容：`git fetch` 终端会话模拟。
 >

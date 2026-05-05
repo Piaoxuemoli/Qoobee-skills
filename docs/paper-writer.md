@@ -111,7 +111,7 @@ scientific-writing, citation-management, literature-review, paper-lookup, peer-r
 | 研究自动化 | 需要自主研究、假设生成 | 10 |
 | 基础设施 | 需要资源检测、文献管理 | 4 |
 
-完整索引见 [skill-catalog.md](../paper-writer/references/skill-catalog.md)。
+完整索引见 [skill-catalog.md](../skills/paper-writer/references/skill-catalog.md)。
 
 ## 检查与导出 / Check & Export
 

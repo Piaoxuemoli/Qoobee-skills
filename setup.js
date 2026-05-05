@@ -43,7 +43,7 @@ function main() {
     execSync('git clone --depth 1 "' + REPO_URL + '" "' + tmpDir + '"', { stdio: "inherit" });
 
     for (const skill of SKILLS) {
-      const src = path.join(tmpDir, skill);
+      const src = path.join(tmpDir, "skills", skill);
       const dest = path.join(destDir, skill);
       if (fs.existsSync(src)) {
         fs.cpSync(src, dest, { recursive: true });

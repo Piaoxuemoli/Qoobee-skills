@@ -5,30 +5,14 @@ __pycache__/
 # Development-only rules (not for end users)
 .claude/rules/
 
-# Lab-report outputs (user-generated, not skill code)
-lab-report/outputs/*
-!lab-report/outputs/.gitkeep
-
-# Coursework-helper outputs (user-generated, not skill code)
-coursework-helper/outputs/*
-!coursework-helper/outputs/.gitkeep
-
 .cursor/
 
-# Terminal screenshot outputs (user-generated, not skill code)
-terminal-screenshot/outputs/*
-!terminal-screenshot/outputs/.gitkeep
-
-# Study-index outputs (user-generated, not skill code)
-study-index/outputs/*
-!study-index/outputs/.gitkeep
+# Skill outputs (user-generated, not skill code)
+skills/*/outputs/*
+!skills/*/outputs/.gitkeep
 
 # External reference code (third-party repos cloned for inspiration/reuse)
 /references/
 
 # Temporary clone directory for external repos
 rf/
-
-# Paper-writer outputs (user-generated, not skill code)
-paper-writer/outputs/*
-!paper-writer/outputs/.gitkeep
