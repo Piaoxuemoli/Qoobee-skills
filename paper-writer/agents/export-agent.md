@@ -60,7 +60,7 @@ python paper-writer/scripts/check_paper.py \
 
 **格式要求**
 - A4 页面，边距：上下 2.54cm，左右 3.17cm
-- 标题：SimHei 16pt 居中加粗
+- 标题：SimHei 16pt 居中加粗（正文第一行，不加页眉）
 - 作者/院系：SimSun 12pt 居中
 - 摘要：SimSun 10.5pt 斜体，左右缩进 1cm
 - 关键词：SimSun 10.5pt
@@ -69,8 +69,15 @@ python paper-writer/scripts/check_paper.py \
 - 二级标题：SimHei 12pt 加粗
 - 参考文献：SimSun 10.5pt（五号）
 - 公式：Cambria Math 12pt 居中
-- 页眉：论文标题（SimSun 9pt 居中）
 - 页脚：居中页码
+- **不加页眉** — 标题只在正文顶部显示一次，不在页眉重复
+
+**Markdown 预处理**
+
+解析 markdown 时注意：
+- `# 标题` → 只渲染为正文标题段落，不同时写入 page header
+- `---` 水平线 → 跳过不渲染（这些是 markdown 分隔符，不是论文中的实际水平线）
+- `**粗体行**`（标题后连续出现）→ 识别为作者/院系信息
 
 ### Step 4: 验证
 
